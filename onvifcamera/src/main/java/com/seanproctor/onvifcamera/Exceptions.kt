@@ -1,4 +1,4 @@
-package com.seanproctor.onvif.onvifcamera
+package com.seanproctor.onvifcamera
 
 class OnvifUnauthorized(message: String) : Exception(message)
 

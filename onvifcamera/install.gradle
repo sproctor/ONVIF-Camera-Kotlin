@@ -1,17 +1,17 @@
 apply plugin: 'com.github.dcendents.android-maven'
 
-group = 'com.seanproctor.onvif'
+group = 'com.seanproctor'
 
 install {
     repositories.mavenInstaller {
         pom {
             project {
                 packaging 'aar'
-                groupId 'com.seanproctor.onvif'
-                artifactId 'ONVIFCameraAndroid'
-                name 'androidlibrary'
-                description 'An android library.'
-                url 'https://github.com/cuttlesoft/android-library-example'
+                groupId 'com.seanproctor'
+                artifactId 'onvifcamera'
+                name 'ONVIFCameraAndroid'
+                description 'An android library to interact with ONVIF cameras.'
+                url 'https://github.com/sproctor/ONVIFCameraAndroid'
 
                 licenses {
                     license {

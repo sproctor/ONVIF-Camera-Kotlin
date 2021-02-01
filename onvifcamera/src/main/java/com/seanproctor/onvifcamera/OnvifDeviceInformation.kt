@@ -1,4 +1,4 @@
-package com.seanproctor.onvif.onvifcamera
+package com.seanproctor.onvifcamera
 
 /**
  * Created from https://www.onvif.org/ver10/device/wsdl/devicemgmt.wsdl

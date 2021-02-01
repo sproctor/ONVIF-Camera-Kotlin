@@ -1,4 +1,4 @@
-package com.seanproctor.onvif.onvifcamera
+package com.seanproctor.onvifcamera
 
 /**
  * Created by Remy Virin on 05/03/2018.

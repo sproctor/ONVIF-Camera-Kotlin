@@ -1,4 +1,4 @@
-package com.seanproctor.onvif.demo
+package com.seanproctor.onvifdemo
 
 import android.content.Intent
 import android.os.Bundle
@@ -8,7 +8,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.seanproctor.onvif.onvifcamera.OnvifDevice
+import com.seanproctor.onvifcamera.OnvifDevice
 import kotlinx.coroutines.launch
 
 const val RTSP_URL = "RTSP_URL"

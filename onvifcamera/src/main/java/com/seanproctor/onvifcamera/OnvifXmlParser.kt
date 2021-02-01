@@ -1,4 +1,4 @@
-package com.seanproctor.onvif.onvifcamera
+package com.seanproctor.onvifcamera
 
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException

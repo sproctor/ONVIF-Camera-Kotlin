@@ -1,1 +1,1 @@
-include ':app', ':onvifcamera'
+include ':demo', ':onvifcamera'

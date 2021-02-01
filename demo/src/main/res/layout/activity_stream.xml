@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.rvirin.onvif.demo.StreamActivity">
+    tools:context="com.seanproctor.onvifdemo.StreamActivity">
 
     <org.videolan.libvlc.util.VLCVideoLayout
         android:id="@+id/video_view"

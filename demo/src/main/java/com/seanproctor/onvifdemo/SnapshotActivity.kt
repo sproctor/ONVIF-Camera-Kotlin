@@ -1,4 +1,4 @@
-package com.seanproctor.onvif.demo
+package com.seanproctor.onvifdemo
 
 import android.graphics.BitmapFactory
 import android.os.Bundle

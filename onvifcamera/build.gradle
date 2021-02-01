@@ -1,17 +1,14 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'maven-publish'
 
 android {
     compileSdkVersion 30
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 30
-        versionCode 2
-        versionName "1.2.0"
-
+        versionCode 4
+        versionName version
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
-
     }
     buildTypes {
         release {
@@ -47,6 +44,3 @@ dependencies {
 
 apply from: 'install.gradle'
 apply from: 'bintray.gradle'
-repositories {
-    mavenCentral()
-}

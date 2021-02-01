@@ -5,7 +5,7 @@ apply plugin: 'kotlin-android'
 android {
     compileSdkVersion 30
     defaultConfig {
-        applicationId 'com.seanproctor.onvif.demo'
+        applicationId 'com.seanproctor.onvifdemo'
         minSdkVersion 21
         targetSdkVersion 30
         versionCode 1

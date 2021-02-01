@@ -1,4 +1,4 @@
-package com.seanproctor.onvif.onvifcamera
+package com.seanproctor.onvifcamera
 
 
 import android.util.Log
@@ -6,15 +6,15 @@ import com.burgstaller.okhttp.DispatchingAuthenticator
 import com.burgstaller.okhttp.basic.BasicAuthenticator
 import com.burgstaller.okhttp.digest.Credentials
 import com.burgstaller.okhttp.digest.DigestAuthenticator
-import com.seanproctor.onvif.onvifcamera.OnvifCommands.deviceInformationCommand
-import com.seanproctor.onvif.onvifcamera.OnvifCommands.getSnapshotURICommand
-import com.seanproctor.onvif.onvifcamera.OnvifCommands.getStreamURICommand
-import com.seanproctor.onvif.onvifcamera.OnvifCommands.profilesCommand
-import com.seanproctor.onvif.onvifcamera.OnvifCommands.servicesCommand
-import com.seanproctor.onvif.onvifcamera.OnvifXmlParser.parseDeviceInformationResponse
-import com.seanproctor.onvif.onvifcamera.OnvifXmlParser.parseProfilesResponse
-import com.seanproctor.onvif.onvifcamera.OnvifXmlParser.parseServicesResponse
-import com.seanproctor.onvif.onvifcamera.OnvifXmlParser.parseStreamURIXML
+import com.seanproctor.onvifcamera.OnvifCommands.deviceInformationCommand
+import com.seanproctor.onvifcamera.OnvifCommands.getSnapshotURICommand
+import com.seanproctor.onvifcamera.OnvifCommands.getStreamURICommand
+import com.seanproctor.onvifcamera.OnvifCommands.profilesCommand
+import com.seanproctor.onvifcamera.OnvifCommands.servicesCommand
+import com.seanproctor.onvifcamera.OnvifXmlParser.parseDeviceInformationResponse
+import com.seanproctor.onvifcamera.OnvifXmlParser.parseProfilesResponse
+import com.seanproctor.onvifcamera.OnvifXmlParser.parseServicesResponse
+import com.seanproctor.onvifcamera.OnvifXmlParser.parseStreamURIXML
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.*
