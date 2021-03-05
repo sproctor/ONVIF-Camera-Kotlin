@@ -7,7 +7,7 @@ install {
         pom {
             project {
                 packaging 'aar'
-                groupId 'com.seanproctor'
+                groupId 'com.seanproctor.onvifcamera'
                 artifactId 'onvifcamera'
                 name 'ONVIFCameraAndroid'
                 description 'An android library to interact with ONVIF cameras.'
