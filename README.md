@@ -4,48 +4,30 @@ Example on how to connect to an ONVIF camera on Android, and dependency to ease 
 ![ONVIF Camera Android](images/demo.png)
 
 
-Install with Gradle:
+Install with Gradle (must have mavenCentral in repositories):
 
 ```groovy
-implementation 'com.rvirin.onvif:onvifcamera:1.1.9'
+implementation 'com.seanproctor:onvifcamera:1.3.0'
 ```
 
-## Connect to an Onvif camera
+## Connect to an Onvif camera and information
 
 ```kotlin
-currentDevice = OnvifDevice("IP_ADDRESS:PORT", "login", "pwd")
-currentDevice.listener = this
-currentDevice.getDeviceInformation()
+val device = OnvifDevice.requestDevice("IP_ADDRESS:PORT", "login", "pwd")
+val deviceInfo = device.getDeviceInformation()
 ```
 ## Retrieve the stream URI
 
 ```kotlin
-class MainActivity : AppCompatActivity(), OnvifListener {
+val device = OnvifDevice.requestDevice("IP_ADDRESS:PORT", "login", "pwd")
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+// Get media profiles to find which ones are streams/snapshots
+val profiles = device.getProfiles()
 
-        currentDevice = OnvifDevice("IP_ADDRESS:PORT", "login", "pwd")
-        currentDevice.listener = this
-        currentDevice.getDeviceInformation()
-    }
-
-    // Called by the SDK each time a request is performed on the camera, when the result is parsed
-    override fun requestPerformed(response: OnvifResponse) {
-        Log.d("ONVIF", "Request ${response.request.type} performed.")
-        Log.d("ONVIF","Succeeded: ${response.success}, "
-		    + "message: ${response.parsingUIMessage}")
-
-        if (response.request.type == GetDeviceInformation) {
-            currentDevice.getProfiles()
-
-        } else if (response.request.type == GetProfiles) {
-            currentDevice.getStreamURI()
-
-        } else if (response.request.type == GetStreamURI) {
-            Log.d("ONVIF", "Stream URI retrieved: ${currentDevice.rtspURI}")
-        }
-    }
+val streamUri = profiles.firstOrNull { it.canStream() }?.let {
+    device.getStreamURI(it, addCredentials = true)
+}
+val snapshotUri = profiles.firstOrNull { it.canSnapshot() }?.let { 
+    device.getSnapshotURI(it)
 }
 ```
