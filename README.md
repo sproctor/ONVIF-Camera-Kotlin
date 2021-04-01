@@ -1,13 +1,11 @@
 # ONVIFCameraAndroid
 Example on how to connect to an ONVIF camera on Android, and dependency to ease the development of an ONVIF Android app.
 
-![ONVIF Camera Android](images/demo.png)
-
 
 Install with Gradle (must have mavenCentral in repositories):
 
 ```groovy
-implementation 'com.seanproctor:onvifcamera:1.3.0'
+implementation 'com.seanproctor:onvifcamera:1.3.1'
 ```
 
 ## Connect to an Onvif camera and information
