@@ -14,7 +14,7 @@ package com.seanproctor.onvifcamera
  * @param hwID The hardware ID of the device.
  */
 
-data class OnvifDeviceInformation(
+public data class OnvifDeviceInformation(
     val manufacturerName: String,
     val modelName: String,
     val fwVersion: String,

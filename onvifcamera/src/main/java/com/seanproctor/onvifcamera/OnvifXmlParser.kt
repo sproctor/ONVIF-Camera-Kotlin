@@ -8,9 +8,9 @@ import java.io.InputStream
 import java.net.MalformedURLException
 import java.net.URL
 
-object OnvifXmlParser {
+public object OnvifXmlParser {
 
-    fun parseProfilesResponse(input: InputStream): List<MediaProfile> {
+    public fun parseProfilesResponse(input: InputStream): List<MediaProfile> {
         val results = ArrayList<MediaProfile>()
 
         try {
@@ -71,7 +71,7 @@ object OnvifXmlParser {
         return result
     }
 
-    fun skip(parser: XmlPullParser) {
+    private fun skip(parser: XmlPullParser) {
         if (parser.eventType != XmlPullParser.START_TAG) {
             throw IllegalStateException()
         }
@@ -84,7 +84,7 @@ object OnvifXmlParser {
         }
     }
 
-    fun parseStreamURIXML(input: InputStream): String {
+    public fun parseStreamURIXML(input: InputStream): String {
         var result = ""
 
         try {
@@ -113,7 +113,7 @@ object OnvifXmlParser {
         return result
     }
 
-    fun parseServicesResponse(input: InputStream): Map<String, String> {
+    public fun parseServicesResponse(input: InputStream): Map<String, String> {
         val namespaceMap = mutableMapOf<String, String>()
 
         try {
@@ -150,12 +150,11 @@ object OnvifXmlParser {
      * @result example output: `cam/realmonitor?audio=1`
      */
     private fun retrievePath(uri: String): String {
-        var url: URL
-        try {
-            url = URL(uri)
+        val url = try {
+            URL(uri)
         } catch (ex: MalformedURLException) {
             val index = uri.indexOf(':')
-            url = URL("http" + uri.drop(index))
+            URL("http" + uri.drop(index))
         }
 
         var result = url.path
@@ -189,7 +188,7 @@ object OnvifXmlParser {
         return result
     }
 
-    fun parseDeviceInformationResponse(input: InputStream): OnvifDeviceInformation {
+    public fun parseDeviceInformationResponse(input: InputStream): OnvifDeviceInformation {
         var manufacturerName = "unknown"
         var modelName = "unknown"
         var fwVersion = "unknown"

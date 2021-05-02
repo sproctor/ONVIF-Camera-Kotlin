@@ -33,7 +33,7 @@ import kotlin.coroutines.suspendCoroutine
 /**
  * Informs us of what and where to send to the device
  */
-enum class OnvifRequestType {
+private enum class OnvifRequestType {
 
     GetServices,
     GetDeviceInformation,
@@ -57,26 +57,26 @@ enum class OnvifRequestType {
  * @param password the password to login on the camera
  * @param namespaceMap a mapping of SOAP namespaces to URI paths
  */
-class OnvifDevice(
-        val hostname: String,
-        val username: String?,
-        val password: String?,
-        val namespaceMap: Map<String, String>,
+public class OnvifDevice(
+        public val hostname: String,
+        public val username: String?,
+        public val password: String?,
+        public val namespaceMap: Map<String, String>,
 ) {
 
-    suspend fun getDeviceInformation(): OnvifDeviceInformation {
+    public suspend fun getDeviceInformation(): OnvifDeviceInformation {
         val path = pathForRequest(OnvifRequestType.GetDeviceInformation)
         val response = execute(hostname, path, deviceInformationCommand, username, password)
         return parseDeviceInformationResponse(response)
     }
 
-    suspend fun getProfiles(): List<MediaProfile> {
+    public suspend fun getProfiles(): List<MediaProfile> {
         val path = pathForRequest(OnvifRequestType.GetProfiles)
         val response = execute(hostname, path, profilesCommand, username, password)
         return parseProfilesResponse(response)
     }
 
-    suspend fun getStreamURI(profile: MediaProfile, addCredentials: Boolean = false): String {
+    public suspend fun getStreamURI(profile: MediaProfile, addCredentials: Boolean = false): String {
         val path = pathForRequest(OnvifRequestType.GetStreamURI)
         val response = execute(hostname, path, getStreamURICommand(profile), username, password)
         val uri = parseStreamURIXML(response)
@@ -87,7 +87,7 @@ class OnvifDevice(
         }
     }
 
-    suspend fun getSnapshotURI(profile: MediaProfile): String {
+    public suspend fun getSnapshotURI(profile: MediaProfile): String {
         val path = pathForRequest(OnvifRequestType.GetSnapshotURI)
         val response = execute(hostname, path, getSnapshotURICommand(profile), username, password)
         return parseStreamURIXML(response)
@@ -126,14 +126,14 @@ class OnvifDevice(
                 uri.host + port + uri.path + query
     }
 
-    companion object {
-        suspend fun requestDevice(hostname: String, username: String?, password: String?): OnvifDevice {
+    public companion object {
+        public suspend fun requestDevice(hostname: String, username: String?, password: String?): OnvifDevice {
             val result = execute(hostname, "/onvif/device_service", servicesCommand, username, password)
             val namespaceMap = parseServicesResponse(result)
             return OnvifDevice(hostname, username, password, namespaceMap)
         }
 
-        suspend fun execute(
+        private suspend fun execute(
                 hostname: String,
                 urlPath: String,
                 command: String,
@@ -199,7 +199,7 @@ class OnvifDevice(
     }
 }
 
-class HttpLogger : HttpLoggingInterceptor.Logger {
+private class HttpLogger : HttpLoggingInterceptor.Logger {
     override fun log(message: String) {
         Log.v("REQUEST", message)
     }
