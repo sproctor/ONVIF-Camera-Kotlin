@@ -1,6 +1,6 @@
 package com.seanproctor.onvifcamera
 
-public object OnvifCommands {
+internal object OnvifCommands {
     /**
      * The header for SOAP 1.2 with digest authentication
      */
@@ -13,13 +13,13 @@ public object OnvifCommands {
 
     private const val envelopeEnd = "</soap:Body></soap:Envelope>"
 
-    public const val profilesCommand: String = (
+    internal const val profilesCommand: String = (
             soapHeader
                     + "<GetProfiles xmlns=\"http://www.onvif.org/ver10/media/wsdl\"/>"
                     + envelopeEnd
             )
 
-    public fun getStreamURICommand(profile: MediaProfile, protocol: String = "RTSP"): String {
+    internal fun getStreamURICommand(profile: MediaProfile, protocol: String = "RTSP"): String {
         return (soapHeader
                 + "<GetStreamUri xmlns=\"http://www.onvif.org/ver20/media/wsdl\">"
                 + "<ProfileToken>${profile.token}</ProfileToken>"
@@ -29,21 +29,21 @@ public object OnvifCommands {
                 )
     }
 
-    public fun getSnapshotURICommand(profile: MediaProfile): String {
+    internal fun getSnapshotURICommand(profile: MediaProfile): String {
 
         return (soapHeader + "<GetSnapshotUri xmlns=\"http://www.onvif.org/ver20/media/wsdl\">"
                 + "<ProfileToken>${profile.token}</ProfileToken>"
                 + "</GetSnapshotUri>" + envelopeEnd)
     }
 
-    public const val deviceInformationCommand: String = (
+    internal const val deviceInformationCommand: String = (
             soapHeader
                     + "<GetDeviceInformation xmlns=\"http://www.onvif.org/ver10/device/wsdl\">"
                     + "</GetDeviceInformation>"
                     + envelopeEnd
             )
 
-    public const val servicesCommand: String = (
+    internal const val servicesCommand: String = (
             soapHeader
                     + "<GetServices xmlns=\"http://www.onvif.org/ver10/device/wsdl\">"
                     + "<IncludeCapability>false</IncludeCapability>"

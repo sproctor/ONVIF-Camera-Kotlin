@@ -8,9 +8,9 @@ import java.io.InputStream
 import java.net.MalformedURLException
 import java.net.URL
 
-public object OnvifXmlParser {
+internal object OnvifXmlParser {
 
-    public fun parseProfilesResponse(input: InputStream): List<MediaProfile> {
+    internal fun parseProfilesResponse(input: InputStream): List<MediaProfile> {
         val results = ArrayList<MediaProfile>()
 
         try {
@@ -84,7 +84,7 @@ public object OnvifXmlParser {
         }
     }
 
-    public fun parseStreamURIXML(input: InputStream): String {
+    internal fun parseStreamURIXML(input: InputStream): String {
         var result = ""
 
         try {
@@ -113,7 +113,7 @@ public object OnvifXmlParser {
         return result
     }
 
-    public fun parseServicesResponse(input: InputStream): Map<String, String> {
+    internal fun parseServicesResponse(input: InputStream): Map<String, String> {
         val namespaceMap = mutableMapOf<String, String>()
 
         try {
@@ -188,7 +188,7 @@ public object OnvifXmlParser {
         return result
     }
 
-    public fun parseDeviceInformationResponse(input: InputStream): OnvifDeviceInformation {
+    internal fun parseDeviceInformationResponse(input: InputStream): OnvifDeviceInformation {
         var manufacturerName = "unknown"
         var modelName = "unknown"
         var fwVersion = "unknown"
