@@ -8,7 +8,7 @@ import java.io.InputStream
 import java.net.MalformedURLException
 import java.net.URL
 
-object OnvifXmlParser {
+internal object OnvifXmlParser {
 
     fun parseProfilesResponse(input: InputStream): List<MediaProfile> {
         val results = ArrayList<MediaProfile>()
@@ -71,7 +71,7 @@ object OnvifXmlParser {
         return result
     }
 
-    fun skip(parser: XmlPullParser) {
+    private fun skip(parser: XmlPullParser) {
         if (parser.eventType != XmlPullParser.START_TAG) {
             throw IllegalStateException()
         }
@@ -150,12 +150,11 @@ object OnvifXmlParser {
      * @result example output: `cam/realmonitor?audio=1`
      */
     private fun retrievePath(uri: String): String {
-        var url: URL
-        try {
-            url = URL(uri)
+        val url = try {
+            URL(uri)
         } catch (ex: MalformedURLException) {
             val index = uri.indexOf(':')
-            url = URL("http" + uri.drop(index))
+            URL("http" + uri.drop(index))
         }
 
         var result = url.path
