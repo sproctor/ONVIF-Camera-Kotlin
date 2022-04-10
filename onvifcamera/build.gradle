@@ -2,10 +2,10 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 32
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 30
+        targetSdkVersion 32
         versionCode 4
         versionName version
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
@@ -24,21 +24,21 @@ android {
     }
     kotlinOptions {
         jvmTarget = "1.8"
-        freeCompilerArgs += '-Xexplicit-api=strict'
+        freeCompilerArgs += "-Xexplicit-api=strict"
     }
 }
 
 dependencies {
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    testImplementation 'junit:junit:_'
+    androidTestImplementation 'androidx.test.ext:junit:_'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:_'
 
-    implementation 'com.squareup.okhttp3:okhttp:4.9.1'
-    implementation "com.squareup.okhttp3:logging-interceptor:4.9.1"
-    implementation 'io.github.rburgst:okhttp-digest:2.5'
+    implementation 'com.squareup.okhttp3:okhttp:_'
+    implementation "com.squareup.okhttp3:logging-interceptor:_"
+    implementation 'io.github.rburgst:okhttp-digest:_'
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.3'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:_"
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:_'
 }
 
 apply from: 'publish.gradle'

@@ -3,11 +3,11 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 32
     defaultConfig {
         applicationId 'com.seanproctor.onvifdemo'
         minSdkVersion 21
-        targetSdkVersion 30
+        targetSdkVersion 32
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
@@ -39,14 +39,14 @@ allprojects {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.3'
-    implementation 'androidx.appcompat:appcompat:1.2.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
-    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.3.1"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:_"
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:_'
+    implementation 'androidx.appcompat:appcompat:_'
+    implementation 'androidx.constraintlayout:constraintlayout:_'
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:_"
 
-    implementation 'com.squareup.okhttp3:okhttp:4.9.1'
-    implementation 'io.github.rburgst:okhttp-digest:2.5'
+    implementation 'com.squareup.okhttp3:okhttp:_'
+    implementation 'io.github.rburgst:okhttp-digest:_'
 
     implementation 'org.videolan.android:libvlc-all:3.3.14'
     implementation project(':onvifcamera')
