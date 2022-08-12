@@ -2,6 +2,7 @@ package com.seanproctor.onvifdemo
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.EditText
 import android.widget.TextView
@@ -9,6 +10,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.seanproctor.onvifcamera.OnvifDevice
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 const val RTSP_URL = "RTSP_URL"
@@ -21,6 +23,8 @@ const val PASSWORD = "PASSWORD"
  * login and password.
  */
 class MainActivity : AppCompatActivity() {
+
+    private val tag = "MainActivity"
 
     private var streamUri: String? = null
     private var snapshotUri: String? = null
@@ -39,39 +43,50 @@ class MainActivity : AppCompatActivity() {
         val password = (findViewById<EditText>(R.id.password)).text.toString()
 
         if (ipAddress.isNotEmpty()) {
-            lifecycleScope.launch {
-                // Get camera services
-                val device = OnvifDevice.requestDevice(ipAddress, login, password)
-                this@MainActivity.device = device
-                
-                // Display camera specs
-                val deviceInformation = device.getDeviceInformation()
-                val textView = findViewById<TextView>(R.id.explanationTextView)
-                textView.text = deviceInformation.toString()
-                
-                // Get media profiles to find which ones are streams/snapshots
-                val profiles = device.getProfiles()
-                
-                profiles.firstOrNull { it.canStream() }?.let {
-                    device.getStreamURI(it, addCredentials = true).let { uri ->
-                        runOnUiThread {
-                            streamUri = uri
-                            val button = findViewById<TextView>(R.id.play_button)
-                            button.isEnabled = true
+            lifecycleScope.launch(Dispatchers.IO) {
+                try {
+                    // Get camera services
+                    Log.d(tag, "Requesting device: \"$ipAddress\" \"$login\" \"$password\"")
+                    val device = OnvifDevice.requestDevice(ipAddress, login, password, true)
+                    this@MainActivity.device = device
+
+                    // Display camera specs
+                    Log.d(tag, "Getting device information")
+                    val deviceInformation = device.getDeviceInformation()
+                    val textView = findViewById<TextView>(R.id.explanationTextView)
+                    textView.text = deviceInformation.toString()
+
+                    // Get media profiles to find which ones are streams/snapshots
+                    Log.d(tag, "Getting device profiles")
+                    val profiles = device.getProfiles()
+
+                    profiles.firstOrNull { it.canStream() }?.let {
+                        Log.d(tag, "Getting stream URI")
+                        device.getStreamURI(it, addCredentials = true).let { uri ->
+                            runOnUiThread {
+                                streamUri = uri
+                                val button = findViewById<TextView>(R.id.play_button)
+                                button.isEnabled = true
+                            }
                         }
                     }
-                }
-                
-                profiles.firstOrNull { it.canSnapshot() }?.let { 
-                    device.getSnapshotURI(it).let { uri ->
-                        runOnUiThread {
-                            snapshotUri = uri
-                            val button = findViewById<TextView>(R.id.view_button)
-                            button.isEnabled = true
+
+                    profiles.firstOrNull { it.canSnapshot() }?.let {
+                        Log.d(tag, "Getting snapshot URI")
+                        device.getSnapshotURI(it).let { uri ->
+                            runOnUiThread {
+                                snapshotUri = uri
+                                val button = findViewById<TextView>(R.id.view_button)
+                                button.isEnabled = true
+                            }
                         }
                     }
+                } catch (e: Exception) {
+                    runOnUiThread {
+                        Toast.makeText(this@MainActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                    Log.e(tag, "error", e)
                 }
-                
             }
         } else {
             Toast.makeText(this,
