@@ -1,14 +1,34 @@
+import java.util.Properties
+import java.net.URI
+
 plugins {
     kotlin("multiplatform")
     id("com.android.library")
     id("maven-publish")
+    id("signing")
+    id("org.jetbrains.dokka")
 }
 
-group = "com.seanproctor.onvifcamera"
+group = "com.seanproctor"
 version = "1.4.0"
 
+val localProperties = Properties().apply {
+    load(File(rootProject.rootDir, "local.properties").inputStream())
+}
+
 kotlin {
-    android()
+    android {
+        publishLibraryVariants("release")
+        compilations.all {
+            kotlinOptions.jvmTarget = "11"
+        }
+    }
+
+    jvm  {
+        compilations.all {
+            kotlinOptions.jvmTarget = "11"
+        }
+    }
 
     sourceSets {
         all {
@@ -36,9 +56,9 @@ kotlin {
             }
         }
 
-        val androidTest by getting {
+        val jvmMain by getting {
             dependencies {
-                implementation("junit:junit:_")
+                implementation("com.github.kobjects:kxml2:_")
             }
         }
     }
@@ -72,4 +92,52 @@ android {
     }
 }
 
-//apply from: 'publish.gradle'
+tasks.dokkaHtml.configure {
+    outputDirectory.set(buildDir.resolve("dokka"))
+}
+
+println("username: ${localProperties.getProperty("ossrhUsername", "")}")
+publishing {
+    repositories {
+        maven {
+            name = "sonatype"
+            url = URI("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+            credentials {
+                username = localProperties.getProperty("ossrhUsername", "")
+                password = localProperties.getProperty("ossrhPassword", "")
+            }
+        }
+    }
+    publications.withType<MavenPublication> {
+        pom {
+            name.set("ONVIF Camera")
+            description.set("A Kotlin library to interact with ONVIF cameras.")
+            url.set("https://github.com/sproctor/ONVIFCameraAndroid")
+            licenses {
+                license {
+                    name.set("MIT")
+                    url.set("https://github.com/sproctor/ONVIFCameraAndroid/blob/master/LICENSE")
+                }
+            }
+            developers {
+                developer {
+                    id.set("sproctor")
+                    name.set("Sean Proctor")
+                    email.set("sproctor@gmail.com")
+                }
+            }
+            scm {
+                url.set("https://github.com/sproctor/ONVIFCameraAndroid/tree/main")
+            }
+        }
+    }
+}
+
+ext["signing.keyId"] = localProperties.getProperty("signing.keyId", "")
+ext["signing.password"] = localProperties.getProperty("signing.password", "")
+ext["signing.secretKeyRingFile"] =
+    localProperties.getProperty("signing.secretKeyRingFile", "")
+
+signing {
+    sign(publishing.publications)
+}
