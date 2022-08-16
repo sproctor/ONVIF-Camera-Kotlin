@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "com.seanproctor"
-version = "1.4.0"
+version = "1.4.1"
 
 val localProperties = Properties().apply {
     load(File(rootProject.rootDir, "local.properties").inputStream())
@@ -92,11 +92,22 @@ android {
     }
 }
 
+val dokkaOutputDir = buildDir.resolve("dokka")
+
 tasks.dokkaHtml.configure {
-    outputDirectory.set(buildDir.resolve("dokka"))
+    outputDirectory.set(dokkaOutputDir)
 }
 
-println("username: ${localProperties.getProperty("ossrhUsername", "")}")
+val deleteDokkaOutputDir by tasks.register<Delete>("deleteDokkaOutputDirectory") {
+    delete(dokkaOutputDir)
+}
+
+val javadocJar = tasks.register<Jar>("javadocJar") {
+    dependsOn(deleteDokkaOutputDir, tasks.dokkaHtml)
+    archiveClassifier.set("javadoc")
+    from(dokkaOutputDir)
+}
+
 publishing {
     repositories {
         maven {
@@ -109,6 +120,7 @@ publishing {
         }
     }
     publications.withType<MavenPublication> {
+        artifact(javadocJar)
         pom {
             name.set("ONVIF Camera")
             description.set("A Kotlin library to interact with ONVIF cameras.")
