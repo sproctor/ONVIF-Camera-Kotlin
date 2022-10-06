@@ -172,9 +172,7 @@ private fun retrieveXAddr(xpp: XmlPullParser): String {
     var result = ""
 
     var eventType = xpp.eventType
-    while (eventType != XmlPullParser.END_DOCUMENT ||
-        (eventType == XmlPullParser.END_TAG && xpp.name == "Service")
-    ) {
+    while (eventType != XmlPullParser.END_DOCUMENT) {
 
         if (eventType == XmlPullParser.START_TAG && xpp.name == "XAddr") {
             xpp.next()
