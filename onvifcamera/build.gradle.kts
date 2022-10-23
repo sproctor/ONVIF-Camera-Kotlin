@@ -52,7 +52,7 @@ kotlin {
         val androidMain by getting {
             dependencies {
                 implementation("io.ktor:ktor-client-okhttp:_")
-                implementation("uk.uuid.slf4j:slf4j-android:_")
+                implementation("org.slf4j:slf4j-android:_")
             }
         }
 
