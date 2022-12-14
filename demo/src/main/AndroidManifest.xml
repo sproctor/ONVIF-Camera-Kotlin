@@ -13,17 +13,13 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
-        tools:targetApi="m"
         tools:ignore="AllowBackup">
         <activity android:name="com.seanproctor.onvifdemo.MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="com.seanproctor.onvifdemo.StreamActivity"/>
-        <activity android:name="com.seanproctor.onvifdemo.SnapshotActivity"/>
     </application>
 
 </manifest>

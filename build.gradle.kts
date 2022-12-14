@@ -3,9 +3,10 @@ buildscript {
         mavenLocal()
         google()
         mavenCentral()
+        gradlePluginPortal()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:_")
+        classpath(Android.tools.build.gradlePlugin)
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:_")
     }
 }
@@ -15,10 +16,7 @@ allprojects {
         mavenLocal()
         google()
         mavenCentral()
-        maven { url = uri("https://www.jitpack.io") }
+        maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+        maven("https://www.jitpack.io")
     }
-}
-
-tasks.register("clean", Delete::class) {
-    delete(rootProject.buildDir)
 }

@@ -33,19 +33,20 @@ kotlin {
     sourceSets {
         all {
             languageSettings {
-                optIn("kotlin.RequiresOptIn")
                 explicitApi()
             }
         }
 
         val commonMain by getting {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:_")
+                api(KotlinX.coroutines.core)
                 implementation("io.ktor:ktor-client-core:_")
                 implementation("io.ktor:ktor-client-auth:_")
                 implementation("io.ktor:ktor-client-logging:_")
                 implementation("org.slf4j:slf4j-api:_")
-                implementation("org.jetbrains.kotlinx:atomicfu:_")
+                implementation("io.ktor:ktor-network:_")
+
+                implementation("com.benasher44:uuid:_")
             }
         }
 
@@ -60,6 +61,10 @@ kotlin {
             dependencies {
                 implementation("com.github.kobjects:kxml2:_")
             }
+        }
+
+        val jvmTest by getting {
+
         }
     }
 }
@@ -122,7 +127,7 @@ publishing {
     publications.withType<MavenPublication> {
         artifact(javadocJar)
         pom {
-            name.set("ONVIF Camera")
+            name.set("ONVIF Camera Kotlin")
             description.set("A Kotlin library to interact with ONVIF cameras.")
             url.set("https://github.com/sproctor/ONVIFCameraAndroid")
             licenses {
