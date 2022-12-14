@@ -16,9 +16,9 @@ import io.ktor.http.*
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
 import io.ktor.utils.io.core.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 /**
  * Informs us of what and where to send to the device
@@ -146,21 +146,12 @@ public class OnvifDevice internal constructor(
         public suspend fun discoverDevices(onDiscover: (String) -> Unit) {
             coroutineScope {
                 try {
-                    val selectorManager = SelectorManager()
-                    val clientSocket = aSocket(selectorManager).udp().connect(InetSocketAddress("239.255.255.250", 3702))
-                    val messageId = uuid4()
-                    val data =
-                        "<s:Envelope xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:a=\"http://schemas.xmlsoap.org/ws/2004/08/addressing\"><s:Header><a:Action s:mustUnderstand=\"1\">http://schemas.xmlsoap.org/ws/2005/04/discovery/Probe</a:Action><a:MessageID>uuid:$messageId</a:MessageID><a:ReplyTo><a:Address>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</a:Address></a:ReplyTo><a:To s:mustUnderstand=\"1\">urn:schemas-xmlsoap-org:ws:2005:04:discovery</a:To></s:Header><s:Body><Probe xmlns=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\"><d:Types xmlns:d=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\" xmlns:dp0=\"http://www.onvif.org/ver10/network/wsdl\">dp0:NetworkVideoTransmitter</d:Types></Probe></s:Body></s:Envelope>"
-                    val datagram = Datagram(
-                        packet = ByteReadPacket(data.toByteArray()),
-                        address = InetSocketAddress("239.255.255.250", 3702)
-                    )
-                    logger?.log("Sending broadcast")
-                    clientSocket.send(datagram)
-                    logger?.log("Sent broadcast")
+                    val address = sendProbe()
+                    val selectorManager = SelectorManager(Dispatchers.IO)
+                    val serverSocket = aSocket(selectorManager).udp().bind(address)
 
                     while (true) {
-                        val input = clientSocket.incoming.receive()
+                        val input = serverSocket.incoming.receive()
                         logger?.log("received response")
                         launch {
                             onDiscover(input.packet.readText())
@@ -170,6 +161,28 @@ public class OnvifDevice internal constructor(
                     logger?.log(e.stackTraceToString())
                 }
             }
+        }
+
+        private suspend fun sendProbe(): SocketAddress {
+            val selectorManager = SelectorManager(Dispatchers.IO)
+            val clientSocket = aSocket(selectorManager)
+                .udp()
+                .connect(InetSocketAddress("239.255.255.250", 3702))
+            val messageId = uuid4()
+            val data =
+                "<s:Envelope xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:a=\"http://schemas.xmlsoap.org/ws/2004/08/addressing\"><s:Header><a:Action s:mustUnderstand=\"1\">http://schemas.xmlsoap.org/ws/2005/04/discovery/Probe</a:Action><a:MessageID>uuid:$messageId</a:MessageID><a:ReplyTo><a:Address>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</a:Address></a:ReplyTo><a:To s:mustUnderstand=\"1\">urn:schemas-xmlsoap-org:ws:2005:04:discovery</a:To></s:Header><s:Body><Probe xmlns=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\"><d:Types xmlns:d=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\" xmlns:dp0=\"http://www.onvif.org/ver10/network/wsdl\">dp0:NetworkVideoTransmitter</d:Types></Probe></s:Body></s:Envelope>"
+            val datagram = Datagram(
+                packet = ByteReadPacket(data.toByteArray()),
+                address = InetSocketAddress("239.255.255.250", 3702)
+            )
+            logger?.log("Sending broadcast")
+            clientSocket.send(datagram)
+            logger?.log("Sent broadcast")
+            val address = clientSocket.localAddress
+            kotlin.runCatching {
+                clientSocket.close()
+            }
+            return address
         }
 
         internal suspend fun execute(
