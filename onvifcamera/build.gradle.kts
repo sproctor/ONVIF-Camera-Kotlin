@@ -44,6 +44,7 @@ kotlin {
                 implementation("io.ktor:ktor-client-auth:_")
                 implementation("io.ktor:ktor-client-logging:_")
                 implementation("org.slf4j:slf4j-api:_")
+                implementation("org.jetbrains.kotlinx:atomicfu:_")
                 implementation("io.ktor:ktor-network:_")
 
                 implementation("com.benasher44:uuid:_")

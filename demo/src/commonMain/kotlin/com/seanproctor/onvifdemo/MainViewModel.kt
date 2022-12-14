@@ -42,7 +42,7 @@ class MainViewModel : ViewModel() {
         discoverJob?.cancel()
         Napier.i { "Starting discovery" }
         discoverJob = viewModelScope.launch(Dispatchers.IO) {
-            OnvifDevice.discoverDevices(57544) {
+            OnvifDevice.discoverDevices {
                 println("Found device: $it")
             }
         }
