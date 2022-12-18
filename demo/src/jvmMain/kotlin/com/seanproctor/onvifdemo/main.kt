@@ -20,7 +20,7 @@ fun main(args: Array<String>) {
     )
     application {
         Window(
-            title = "Compose Preferences Demo",
+            title = "ONVIF Camera Demo",
             onCloseRequest = ::exitApplication
         ) {
             MainContent(viewModel)

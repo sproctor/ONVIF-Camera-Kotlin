@@ -111,35 +111,35 @@ internal actual fun parseOnvifStreamUri(input: String): String {
     return result
 }
 
-internal actual fun parseOnvifServices(input: String): Map<String, String> {
-    val namespaceMap = mutableMapOf<String, String>()
-
-    try {
-        val factory = XmlPullParserFactory.newInstance()
-        factory.isNamespaceAware = true
-        val xpp = factory.newPullParser()
-        xpp.setInput(StringReader(input))
-        var eventType = xpp.eventType
-        while (eventType != XmlPullParser.END_DOCUMENT) {
-
-            if (eventType == XmlPullParser.START_TAG && xpp.name == "Namespace") {
-                xpp.next()
-                val currentNamespace = xpp.text
-                val uri = retrieveXAddr(xpp)
-                namespaceMap[currentNamespace] = retrievePath(uri)
-            }
-
-            eventType = xpp.next()
-        }
-
-    } catch (e: XmlPullParserException) {
-        e.printStackTrace()
-    } catch (e: IOException) {
-        e.printStackTrace()
-    }
-
-    return namespaceMap
-}
+//internal actual fun parseOnvifServices(input: String): Map<String, String> {
+//    val namespaceMap = mutableMapOf<String, String>()
+//
+//    try {
+//        val factory = XmlPullParserFactory.newInstance()
+//        factory.isNamespaceAware = true
+//        val xpp = factory.newPullParser()
+//        xpp.setInput(StringReader(input))
+//        var eventType = xpp.eventType
+//        while (eventType != XmlPullParser.END_DOCUMENT) {
+//
+//            if (eventType == XmlPullParser.START_TAG && xpp.name == "Namespace") {
+//                xpp.next()
+//                val currentNamespace = xpp.text
+//                val uri = retrieveXAddr(xpp)
+//                namespaceMap[currentNamespace] = retrievePath(uri)
+//            }
+//
+//            eventType = xpp.next()
+//        }
+//
+//    } catch (e: XmlPullParserException) {
+//        e.printStackTrace()
+//    } catch (e: IOException) {
+//        e.printStackTrace()
+//    }
+//
+//    return namespaceMap
+//}
 
 /**
  * Util method to retrieve a path from an URL (without IP address and port)

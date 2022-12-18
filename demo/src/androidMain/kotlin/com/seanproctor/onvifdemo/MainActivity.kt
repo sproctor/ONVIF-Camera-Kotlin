@@ -8,6 +8,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.seanproctor.onvifcamera.OnvifDevice
 import dev.icerock.moko.mvvm.createViewModelFactory
+import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
 import io.ktor.client.plugins.logging.*
 
@@ -19,6 +20,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        Napier.base(DebugAntilog())
 
         OnvifDevice.setLogger(
             object : Logger {

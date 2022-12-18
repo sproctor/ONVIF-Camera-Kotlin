@@ -21,10 +21,9 @@ class MainViewModel : ViewModel() {
 
     private var discoverJob: Job? = null
 
-    val ipAddress = MutableStateFlow("")
+    val address = MutableStateFlow("")
     val login = MutableStateFlow("")
     val password = MutableStateFlow("")
-    val streamUri = MutableStateFlow<String?>(null)
     val snapshotUri = MutableStateFlow<String?>(null)
 
     private var device: OnvifDevice? = null
@@ -38,12 +37,16 @@ class MainViewModel : ViewModel() {
     private val _image = MutableStateFlow<ByteArray?>(null)
     val image = _image.asStateFlow()
 
+    private val _discoveredDevices = MutableStateFlow<Set<String>>(emptySet())
+    val discoveredDevices = _discoveredDevices.asStateFlow()
+
     fun startDiscovery() {
         discoverJob?.cancel()
         Napier.i { "Starting discovery" }
         discoverJob = viewModelScope.launch(Dispatchers.IO) {
             OnvifDevice.discoverDevices {
-                println("Found device: $it")
+                Napier.i("Found device: $it")
+                _discoveredDevices.value += it
             }
         }
     }
@@ -54,16 +57,16 @@ class MainViewModel : ViewModel() {
     }
 
     fun connectClicked() {
-        val ipAddress = ipAddress.value
-        val login = login.value
-        val password = password.value
+        val address = address.value.trim()
+        val login = login.value.trim()
+        val password = password.value.trim()
 
-        if (ipAddress.isNotEmpty()) {
+        if (address.isNotEmpty()) {
             viewModelScope.launch(Dispatchers.IO) {
                 try {
                     // Get camera services
-                    Napier.d("Requesting device: \"$ipAddress\" \"$login\" \"$password\"")
-                    val device = OnvifDevice.requestDevice(ipAddress, login, password, true)
+                    Napier.d("Requesting device: \"$address\" \"$login\" \"$password\"")
+                    val device = OnvifDevice.requestDevice(address, login, password, true)
                     this@MainViewModel.device = device
 
                     // Display camera specs
@@ -75,13 +78,6 @@ class MainViewModel : ViewModel() {
                     Napier.d("Getting device profiles")
                     val profiles = device.getProfiles()
 
-                    profiles.firstOrNull { it.canStream() }?.let {
-                        Napier.d("Getting stream URI")
-                        device.getStreamURI(it, addCredentials = true).let { uri ->
-                            streamUri.value = uri
-                        }
-                    }
-
                     profiles.firstOrNull { it.canSnapshot() }?.let {
                         Napier.d("Getting snapshot URI")
                         device.getSnapshotURI(it).let { uri ->
@@ -90,7 +86,7 @@ class MainViewModel : ViewModel() {
                     }
                 } catch (e: Exception) {
                     _errorText.value = "Error: ${e.message}"
-                    Napier.e( "error", e)
+                    Napier.e("error", e)
                 }
             }
         } else {
@@ -105,38 +101,48 @@ class MainViewModel : ViewModel() {
     fun getSnapshot() {
         val username = login.value
         val password = password.value
-        val url = streamUri.value!!
+        val url = snapshotUri.value ?: return
 
-        // TODO: move this to a ViewModel
-        HttpClient {
-            if (username != null && password != null) {
-                install(Auth) {
-                    basic {
-                        credentials {
-                            BasicAuthCredentials(username = username, password = password)
+        viewModelScope.launch(Dispatchers.IO) {
+            HttpClient {
+                if (username.isNotBlank() && password.isNotBlank()) {
+                    install(Auth) {
+                        basic {
+                            credentials {
+                                BasicAuthCredentials(username = username, password = password)
+                            }
                         }
-                    }
-                    customDigest {
-                        credentials {
-                            DigestAuthCredentials(username = username, password = password)
+                        customDigest {
+                            credentials {
+                                DigestAuthCredentials(username = username, password = password)
+                            }
                         }
                     }
                 }
-            }
-            install(Logging) {
-                logger = Logger.DEFAULT
-                level = LogLevel.BODY
-            }
-        }.use { client ->
-            viewModelScope.launch(Dispatchers.IO) {
+                install(Logging) {
+                    logger = Logger.DEFAULT
+                    level = LogLevel.BODY
+                }
+            }.use { client ->
                 Napier.d("Getting snapshot: $url")
-                val response = client.get(url)
-                if (response.status.value in 200..299) {
-                    _image.value = response.body()
-                } else {
-                    _errorText.value = response.status.toString()
+                try {
+                    val response = client.get(url)
+                    if (response.status.value in 200..299) {
+                        Napier.d("Got image")
+                        _image.value = response.body()
+                    } else {
+                        Napier.d("Got an error: ${response.status}")
+                        _errorText.value = response.status.toString()
+                    }
+                } catch (e: Exception) {
+                    Napier.d("Got an error: ${e.message}", e)
+                    _errorText.value = e.message ?: "Uknown error"
                 }
             }
         }
+    }
+
+    fun clearSnapshot() {
+        _image.value = null
     }
 }

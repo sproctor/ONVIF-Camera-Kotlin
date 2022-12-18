@@ -4,6 +4,7 @@ import java.net.URI
 plugins {
     kotlin("multiplatform")
     id("com.android.library")
+    kotlin("plugin.serialization")
     id("maven-publish")
     id("signing")
     id("org.jetbrains.dokka")
@@ -40,6 +41,10 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 api(KotlinX.coroutines.core)
+
+                implementation("io.github.pdvrieze.xmlutil:serialization:0.84.3")
+                implementation("io.github.pdvrieze.xmlutil:serialutil:0.84.3")
+
                 implementation("io.ktor:ktor-client-core:_")
                 implementation("io.ktor:ktor-client-auth:_")
                 implementation("io.ktor:ktor-client-logging:_")
@@ -48,6 +53,12 @@ kotlin {
                 implementation("io.ktor:ktor-network:_")
 
                 implementation("com.benasher44:uuid:_")
+            }
+        }
+
+        val commonTest by getting {
+            dependencies {
+                implementation(kotlin("test"))
             }
         }
 

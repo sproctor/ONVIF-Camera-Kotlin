@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://www.w3.org/2003/05/soap-envelope"
+                   xmlns:SOAP-ENC="http://www.w3.org/2003/05/soap-encoding"
+                   xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing"
+                   xmlns:d="http://schemas.xmlsoap.org/ws/2005/04/discovery"
+                   xmlns:dn="http://www.onvif.org/ver10/network/wsdl"
+                   xmlns:tds="http://www.onvif.org/ver10/device/wsdl">
+    <SOAP-ENV:Header>
+        <wsa:MessageID>uuid:f0a90683-02ff-4f05-98fe-537b6c9486e4</wsa:MessageID>
+        <wsa:RelatesTo>uuid:63a205c4-7eae-4dd5-99dc-75e38ff576b3</wsa:RelatesTo>
+        <wsa:To SOAP-ENV:mustUnderstand="true">http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</wsa:To>
+        <wsa:Action SOAP-ENV:mustUnderstand="true">http://schemas.xmlsoap.org/ws/2005/04/discovery/ProbeMatches
+        </wsa:Action>
+        <d:AppSequence SOAP-ENV:mustUnderstand="true" MessageNumber="6" InstanceId="1669141867"></d:AppSequence>
+    </SOAP-ENV:Header>
+    <SOAP-ENV:Body>
+        <d:ProbeMatches>
+            <d:ProbeMatch>
+                <wsa:EndpointReference>
+                    <wsa:Address>urn:uuid:3ea96f68-b845-4c0b-87cf-eee904c4be65</wsa:Address>
+                </wsa:EndpointReference>
+                <d:Types>tds:Device dn:NetworkVideoTransmitter</d:Types>
+                <d:Scopes>onvif://www.onvif.org/Profile/Streaming onvif://www.onvif.org/Profile/G
+                    onvif://www.onvif.org/Profile/T onvif://www.onvif.org/hardware/M2025-LE
+                    onvif://www.onvif.org/name/AXIS%20M2025-LE onvif://www.onvif.org/location/
+                </d:Scopes>
+                <d:XAddrs>http://192.168.0.209/onvif/device_service https://192.168.0.209/onvif/device_service
+                    http://169.254.251.249/onvif/device_service https://169.254.251.249/onvif/device_service
+                </d:XAddrs>
+                <d:MetadataVersion>1</d:MetadataVersion>
+            </d:ProbeMatch>
+        </d:ProbeMatches>
+    </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
