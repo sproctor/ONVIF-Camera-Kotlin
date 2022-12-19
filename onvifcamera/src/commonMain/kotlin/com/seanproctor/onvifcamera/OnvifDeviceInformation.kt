@@ -15,18 +15,18 @@ package com.seanproctor.onvifcamera
  */
 
 public data class OnvifDeviceInformation(
-    val manufacturerName: String,
-    val modelName: String,
-    val fwVersion: String,
+    val manufacturer: String,
+    val model: String,
+    val firmwareVersion: String,
     val serialNumber: String,
-    val hwID: String,
+    val hardwareId: String,
 ) {
     override fun toString(): String = (
             "Device information:\n"
-                    + "Manufacturer: $manufacturerName\n"
-                    + "Model: $modelName\n"
-                    + "FirmwareVersion: $fwVersion\n"
+                    + "Manufacturer: $manufacturer\n"
+                    + "Model: $model\n"
+                    + "FirmwareVersion: $firmwareVersion\n"
                     + "SerialNumber: $serialNumber\n"
-            //parsedResult += "HardwareId: " + parsed.hwID + "\n";
+                    + "HardwareId: $hardwareId\n"
             )
 }

@@ -62,19 +62,6 @@ kotlin {
             }
         }
 
-        val androidMain by getting {
-            dependencies {
-                implementation("io.ktor:ktor-client-okhttp:_")
-                implementation("org.slf4j:slf4j-android:_")
-            }
-        }
-
-        val jvmMain by getting {
-            dependencies {
-                implementation("com.github.kobjects:kxml2:_")
-            }
-        }
-
         val jvmTest by getting {
 
         }

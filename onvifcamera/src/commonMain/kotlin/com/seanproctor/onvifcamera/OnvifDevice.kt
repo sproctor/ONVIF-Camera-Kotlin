@@ -26,18 +26,19 @@ import kotlinx.coroutines.launch
  * (getDeviceInformation, getProfiles and getStreamURI).
  * @param username the username to login on the camera
  * @param password the password to login on the camera
- * @param serviceAddresses a mapping of SOAP services to endpoints
+ * @param namespaceMap a mapping of SOAP services to endpoints
  */
 public class OnvifDevice internal constructor(
     public val username: String?,
     public val password: String?,
-    public val serviceAddresses: Map<String, String>,
+    public val namespaceMap: Map<String, String>,
     public val debug: Boolean,
 ) {
 
     public suspend fun getDeviceInformation(): OnvifDeviceInformation {
         val endpoint = getEndpointForRequest(OnvifRequestType.GetDeviceInformation)
         val response = execute(endpoint, deviceInformationCommand, username, password, debug)
+        logger?.log(response)
         return parseOnvifDeviceInformation(response)
     }
 
@@ -56,15 +57,15 @@ public class OnvifDevice internal constructor(
     public suspend fun getSnapshotURI(profile: MediaProfile): String {
         val endpoint = getEndpointForRequest(OnvifRequestType.GetSnapshotURI)
         val response = execute(endpoint, getSnapshotURICommand(profile), username, password, debug)
-        return parseOnvifStreamUri(response)
+        return parseOnvifSnapshotUri(response)
     }
 
     private fun getEndpointForRequest(requestType: OnvifRequestType): String {
-        return serviceAddresses[requestType.namespace()] ?: throw OnvifServiceUnavailable()
+        return namespaceMap[requestType.namespace()] ?: throw OnvifServiceUnavailable()
     }
 
     public companion object {
-        private var logger: Logger? = null
+        internal var logger: Logger? = null
 
         public fun setLogger(logger: Logger) {
             this.logger = logger
@@ -88,9 +89,7 @@ public class OnvifDevice internal constructor(
                 password,
                 debug
             )
-            val serviceAddresses = parseOnvifServices(result).services.associate {
-                it.namespace to it.address
-            }
+            val serviceAddresses = parseOnvifServices(result)
             return OnvifDevice(username, password, serviceAddresses, debug)
         }
 

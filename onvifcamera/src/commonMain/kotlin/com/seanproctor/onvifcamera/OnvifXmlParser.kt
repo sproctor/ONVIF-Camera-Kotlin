@@ -1,5 +1,6 @@
 package com.seanproctor.onvifcamera
 
+import com.seanproctor.onvifcamera.soap.*
 import com.seanproctor.onvifcamera.soap.Envelope
 import com.seanproctor.onvifcamera.soap.GetServicesResponse
 import com.seanproctor.onvifcamera.soap.ProbeMatch
@@ -12,33 +13,11 @@ import nl.adaptivity.xmlutil.XmlDeclMode
 import nl.adaptivity.xmlutil.serialization.UnknownChildHandler
 import nl.adaptivity.xmlutil.serialization.XML
 
-internal expect fun parseOnvifProfiles(input: String): List<MediaProfile>
-
-internal expect fun parseOnvifStreamUri(input: String): String
-
-internal fun parseOnvifServices(input: String): GetServicesResponse {
-    val module = SerializersModule {
-        polymorphic(Any::class) {
-            subclass(GetServicesResponse::class, serializer())
-        }
-    }
-
-    val xml = XML(module) {
-        xmlDeclMode = XmlDeclMode.Minimal
-        autoPolymorphic = true
-    }
-    val serializer = serializer<Envelope<GetServicesResponse>>()
-
-    val result = xml.decodeFromString(serializer, input)
-
-    return result.data
-}
-
 @OptIn(ExperimentalXmlUtilApi::class)
-internal fun parseOnvifProbeResponse(input: String): List<ProbeMatch> {
+private inline fun <reified T : Any> parseSoap(input: String): T {
     val module = SerializersModule {
         polymorphic(Any::class) {
-            subclass(ProbeMatches::class, serializer())
+            subclass(T::class, serializer())
         }
     }
 
@@ -47,11 +26,46 @@ internal fun parseOnvifProbeResponse(input: String): List<ProbeMatch> {
         autoPolymorphic = true
         unknownChildHandler = UnknownChildHandler { _, _, _, _, _ -> emptyList() }
     }
-    val serializer = serializer<Envelope<ProbeMatches>>()
+    val serializer = serializer<Envelope<T>>()
 
-    val result = xml.decodeFromString(serializer, input)
-
-    return result.data.matches
+    return xml.decodeFromString(serializer, input).data
 }
 
-internal expect fun parseOnvifDeviceInformation(input: String): OnvifDeviceInformation
+internal fun parseOnvifProfiles(input: String): List<MediaProfile> {
+    val result = parseSoap<GetProfilesResponse>(input)
+
+    return result.profiles.map {
+        MediaProfile(it.name, it.token, it.encoder.encoding)
+    }
+}
+
+internal fun parseOnvifStreamUri(input: String): String {
+    val result = parseSoap<GetStreamUriResponse>(input)
+    return result.uri
+}
+
+internal fun parseOnvifSnapshotUri(input: String): String {
+    val result = parseSoap<GetSnapshotUriResponse>(input)
+    return result.uri
+}
+
+internal fun parseOnvifServices(input: String): Map<String, String> {
+    return parseSoap<GetServicesResponse>(input).services.associate {
+        it.namespace to it.address
+    }
+}
+
+internal fun parseOnvifProbeResponse(input: String): List<ProbeMatch> {
+    return parseSoap<ProbeMatches>(input).matches
+}
+
+internal fun parseOnvifDeviceInformation(input: String): OnvifDeviceInformation {
+    val result = parseSoap<GetDeviceInformationResponse>(input)
+    return OnvifDeviceInformation(
+        manufacturer = result.manufacturer,
+        model = result.model,
+        firmwareVersion = result.firmwareVersion,
+        serialNumber = result.serialNumber,
+        hardwareId = result.hardwareId,
+    )
+}
