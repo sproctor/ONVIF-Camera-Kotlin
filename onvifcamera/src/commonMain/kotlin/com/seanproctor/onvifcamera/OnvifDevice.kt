@@ -38,7 +38,6 @@ public class OnvifDevice internal constructor(
     public suspend fun getDeviceInformation(): OnvifDeviceInformation {
         val endpoint = getEndpointForRequest(OnvifRequestType.GetDeviceInformation)
         val response = execute(endpoint, deviceInformationCommand, username, password, debug)
-        logger?.log(response)
         return parseOnvifDeviceInformation(response)
     }
 
@@ -65,7 +64,7 @@ public class OnvifDevice internal constructor(
     }
 
     public companion object {
-        internal var logger: Logger? = null
+        private var logger: Logger? = null
 
         public fun setLogger(logger: Logger) {
             this.logger = logger

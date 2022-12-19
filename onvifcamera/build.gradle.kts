@@ -20,9 +20,6 @@ val localProperties = Properties().apply {
 kotlin {
     android {
         publishLibraryVariants("release")
-        compilations.all {
-            kotlinOptions.jvmTarget = "11"
-        }
     }
 
     jvm  {
@@ -60,10 +57,6 @@ kotlin {
             dependencies {
                 implementation(kotlin("test"))
             }
-        }
-
-        val jvmTest by getting {
-
         }
     }
 }

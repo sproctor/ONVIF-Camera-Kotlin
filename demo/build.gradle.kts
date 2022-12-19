@@ -4,22 +4,6 @@ plugins {
     id("org.jetbrains.compose")
 }
 
-android {
-    compileSdk = 33
-    defaultConfig {
-        applicationId = "com.seanproctor.android"
-        minSdk = 21
-        targetSdk = 33
-        versionCode = 1
-        versionName = "1.0-SNAPSHOT"
-    }
-    buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
-        }
-    }
-}
-
 kotlin {
     android()
     jvm {
@@ -55,7 +39,6 @@ kotlin {
             dependencies {
                 // Android presentation components
                 implementation(AndroidX.activity.compose)
-                //    implementation("org.videolan.android:libvlc-all:_")
                 implementation("androidx.lifecycle:lifecycle-viewmodel-compose:_")
                 implementation("dev.icerock.moko:mvvm-flow-compose:_")
             }
@@ -64,6 +47,22 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.currentOs)
             }
+        }
+    }
+}
+
+android {
+    compileSdk = 33
+    defaultConfig {
+        applicationId = "com.seanproctor.android"
+        minSdk = 21
+        targetSdk = 33
+        versionCode = 1
+        versionName = "1.0-SNAPSHOT"
+    }
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = false
         }
     }
 }
