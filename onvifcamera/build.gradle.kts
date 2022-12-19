@@ -11,7 +11,7 @@ plugins {
 }
 
 group = "com.seanproctor"
-version = "1.4.1"
+version = "1.5.0"
 
 val localProperties = Properties().apply {
     load(File(rootProject.rootDir, "local.properties").inputStream())
