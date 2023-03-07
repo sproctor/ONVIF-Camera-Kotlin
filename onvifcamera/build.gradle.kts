@@ -1,6 +1,3 @@
-import java.util.Properties
-import java.net.URI
-
 plugins {
     kotlin("multiplatform")
     id("com.android.library")
@@ -9,11 +6,7 @@ plugins {
 }
 
 group = "com.seanproctor"
-version = "1.5.0"
-
-val localProperties = Properties().apply {
-    load(File(rootProject.rootDir, "local.properties").inputStream())
-}
+version = "1.6.0"
 
 kotlin {
     android {
