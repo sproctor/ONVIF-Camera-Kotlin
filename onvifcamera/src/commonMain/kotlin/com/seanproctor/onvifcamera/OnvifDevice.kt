@@ -92,7 +92,7 @@ public class OnvifDevice internal constructor(
             return OnvifDevice(username, password, serviceAddresses, debug)
         }
 
-        public suspend fun discoverDevices(onDiscover: (String) -> Unit) {
+        public suspend fun discoverDevices(onDiscover: (DiscoveredOnvifDevice) -> Unit) {
             coroutineScope {
                 try {
                     val address = sendProbe()
@@ -109,10 +109,18 @@ public class OnvifDevice internal constructor(
                                 val data = input.packet.readText()
                                 val result = parseOnvifProbeResponse(data)
                                 if (result.size == 1) {
-                                    val xaddrs = result.first().xaddrs.split(" ")
+                                    val probeMatch = result.first()
+                                    val xaddrs = probeMatch.xaddrs?.split(" ") ?: emptyList()
                                     for (endpoint in xaddrs) {
                                         if (getSystemDateAndTime(endpoint)) {
-                                            onDiscover(endpoint)
+                                            onDiscover(
+                                                DiscoveredOnvifDevice(
+                                                    address = probeMatch.endpointReference.address,
+                                                    types = probeMatch.types?.split(" ") ?: emptyList(),
+                                                    scopes = probeMatch.scopes?.split(" ") ?: emptyList(),
+                                                    uri = endpoint,
+                                                )
+                                            )
                                             break
                                         }
                                     }

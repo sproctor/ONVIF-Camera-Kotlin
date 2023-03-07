@@ -3,14 +3,12 @@ package com.seanproctor.onvifdemo
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.seanproctor.onvifcamera.OnvifDevice
 import dev.icerock.moko.mvvm.createViewModelFactory
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
-import io.ktor.client.plugins.logging.*
+import io.ktor.client.plugins.logging.Logger
 
 /**
  * Main activity of this demo project. It allows the user to type his camera IP address,

@@ -9,13 +9,23 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
+import androidx.compose.material.Button
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.Scaffold
+import androidx.compose.material.SnackbarDuration
+import androidx.compose.material.Text
+import androidx.compose.material.TextField
+import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.runtime.*
+import androidx.compose.material.rememberScaffoldState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 
 @Composable
 fun MainContent(viewModel: MainViewModel) {
@@ -43,8 +53,8 @@ fun MainContent(viewModel: MainViewModel) {
                 val discoveredDevices by viewModel.discoveredDevices.collectAsState()
                 LazyColumn {
                     items(discoveredDevices.toList()) {
-                        Box(Modifier.fillMaxWidth().clickable { viewModel.address.value = it }) {
-                            Text(it)
+                        Box(Modifier.fillMaxWidth().clickable { viewModel.address.value = it.second }) {
+                            Text(it.first)
                         }
                     }
                 }
@@ -52,7 +62,7 @@ fun MainContent(viewModel: MainViewModel) {
                     Text("Scan")
                 }
 
-                val address by viewModel.address.collectAsState()
+                val address by viewModel.address
                 TextField(
                     value = address,
                     onValueChange = { viewModel.address.value = it },
@@ -60,7 +70,7 @@ fun MainContent(viewModel: MainViewModel) {
                     singleLine = true,
                 )
 
-                val username by viewModel.login.collectAsState()
+                val username by viewModel.login
                 TextField(
                     value = username,
                     onValueChange = { viewModel.login.value = it },
@@ -68,7 +78,7 @@ fun MainContent(viewModel: MainViewModel) {
                     singleLine = true,
                 )
 
-                val password by viewModel.password.collectAsState()
+                val password by viewModel.password
                 TextField(
                     value = password,
                     onValueChange = { viewModel.password.value = it },
@@ -88,7 +98,7 @@ fun MainContent(viewModel: MainViewModel) {
                 val explanationText = viewModel.explanationText.collectAsState().value
                 if (explanationText != null) {
                     Text(explanationText)
-                    val snapshotUri = viewModel.snapshotUri.collectAsState().value
+                    val snapshotUri = viewModel.snapshotUri.value
                     Button(
                         onClick = { viewModel.getSnapshot() },
                         enabled = snapshotUri != null

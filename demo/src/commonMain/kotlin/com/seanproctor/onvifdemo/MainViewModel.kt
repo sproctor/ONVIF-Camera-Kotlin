@@ -1,5 +1,7 @@
 package com.seanproctor.onvifdemo
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import com.seanproctor.onvifcamera.OnvifDevice
 import com.seanproctor.onvifcamera.customDigest
 import dev.icerock.moko.mvvm.viewmodel.ViewModel
@@ -21,10 +23,10 @@ class MainViewModel : ViewModel() {
 
     private var discoverJob: Job? = null
 
-    val address = MutableStateFlow("")
-    val login = MutableStateFlow("")
-    val password = MutableStateFlow("")
-    val snapshotUri = MutableStateFlow<String?>(null)
+    val address = mutableStateOf("")
+    val login = mutableStateOf("")
+    val password = mutableStateOf("")
+    val snapshotUri = mutableStateOf<String?>(null)
 
     private var device: OnvifDevice? = null
 
@@ -37,7 +39,7 @@ class MainViewModel : ViewModel() {
     private val _image = MutableStateFlow<ByteArray?>(null)
     val image = _image.asStateFlow()
 
-    private val _discoveredDevices = MutableStateFlow<Set<String>>(emptySet())
+    private val _discoveredDevices = MutableStateFlow<Map<String, String>>(emptyMap())
     val discoveredDevices = _discoveredDevices.asStateFlow()
 
     fun startDiscovery() {
@@ -46,7 +48,7 @@ class MainViewModel : ViewModel() {
         discoverJob = viewModelScope.launch(Dispatchers.IO) {
             OnvifDevice.discoverDevices {
                 Napier.i("Found device: $it")
-                _discoveredDevices.value += it
+                _discoveredDevices.value += it.address to it.uri
             }
         }
     }
