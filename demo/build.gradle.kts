@@ -33,6 +33,9 @@ kotlin {
 
                 // Logging
                 implementation("io.github.aakira:napier:_")
+
+                // SSDP
+                implementation("com.seanproctor:lighthouse:_")
             }
         }
         val androidMain by getting {

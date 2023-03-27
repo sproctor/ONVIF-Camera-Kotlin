@@ -1,25 +1,39 @@
 package com.seanproctor.onvifdemo
 
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import com.ivanempire.lighthouse.LighthouseClient
+import com.seanproctor.onvifcamera.DiscoveredOnvifDevice
 import com.seanproctor.onvifcamera.OnvifDevice
 import com.seanproctor.onvifcamera.customDigest
 import dev.icerock.moko.mvvm.viewmodel.ViewModel
 import io.github.aakira.napier.Napier
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.plugins.auth.*
-import io.ktor.client.plugins.auth.providers.*
-import io.ktor.client.plugins.logging.*
-import io.ktor.client.request.*
-import io.ktor.utils.io.core.*
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.plugins.auth.Auth
+import io.ktor.client.plugins.auth.providers.BasicAuthCredentials
+import io.ktor.client.plugins.auth.providers.DigestAuthCredentials
+import io.ktor.client.plugins.auth.providers.basic
+import io.ktor.client.plugins.logging.DEFAULT
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logger
+import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.request.get
+import io.ktor.http.Url
+import io.ktor.utils.io.core.use
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 
-class MainViewModel : ViewModel() {
+class MainViewModel(
+    private val lighthouseClient: LighthouseClient
+) : ViewModel() {
 
     private var discoverJob: Job? = null
 
@@ -39,18 +53,53 @@ class MainViewModel : ViewModel() {
     private val _image = MutableStateFlow<ByteArray?>(null)
     val image = _image.asStateFlow()
 
-    private val _discoveredDevices = MutableStateFlow<Map<String, String>>(emptyMap())
-    val discoveredDevices = _discoveredDevices.asStateFlow()
+    private val onvifDevices = MutableStateFlow<Map<String, DiscoveredOnvifDevice>>(emptyMap())
+    private val ssdpDevices = MutableStateFlow<Map<String, CameraInformation>>(emptyMap())
+
+    val discoveredDevices: Flow<List<CameraInformation>> = combine(onvifDevices, ssdpDevices) { onvifDevices, ssdpDevices ->
+        onvifDevices.entries.map { onvifEntry ->
+            val ssdpDevice = ssdpDevices.entries.firstOrNull() { ssdpEntry ->
+                onvifEntry.value.addresses.any { Url(it).host == ssdpEntry.value.host }
+            }?.value
+            val friendlyName = ssdpDevice?.friendlyName
+            CameraInformation(friendlyName, onvifEntry.value.id, onvifEntry.key)
+        }
+    }
 
     fun startDiscovery() {
         discoverJob?.cancel()
         Napier.i { "Starting discovery" }
         discoverJob = viewModelScope.launch(Dispatchers.IO) {
-            OnvifDevice.discoverDevices {
-                Napier.i("Found device: $it")
-                _discoveredDevices.value += it.address to it.uri
+            OnvifDevice.discoverDevices { device ->
+                viewModelScope.launch(Dispatchers.IO) {
+                    Napier.i("Found device: $device")
+                    device.addresses
+                        .firstOrNull { OnvifDevice.isReachableEndpoint(it) }
+                        ?.let {
+                            onvifDevices.value = onvifDevices.value + (Url(it).host to device)
+                        }
+                }
             }
         }
+        lighthouseClient.discoverDevices()
+            .onEach { ssdpDevices ->
+                ssdpDevices.forEach {
+                    if (!this.ssdpDevices.value.containsKey(it.uuid)) {
+                        try {
+                            val detailedDevice = lighthouseClient.retrieveDescription(it)
+                            val info = CameraInformation(
+                                friendlyName = detailedDevice.friendlyName,
+                                id = it.uuid,
+                                host = it.location.host,
+                            )
+                            this.ssdpDevices.value = this.ssdpDevices.value + (it.uuid to info)
+                        } catch (e: Throwable) {
+                            // Ignore exceptions
+                        }
+                    }
+                }
+            }
+            .launchIn(viewModelScope + Dispatchers.IO)
     }
 
     fun stopDiscovery() {
@@ -148,3 +197,5 @@ class MainViewModel : ViewModel() {
         _image.value = null
     }
 }
+
+data class CameraInformation(val friendlyName: String?, val id: String, val host: String)

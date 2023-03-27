@@ -120,23 +120,19 @@ public class OnvifDevice internal constructor(
                             discoveredAddresses.add(input.address)
                             launch {
                                 val data = input.packet.readText()
+                                logger?.log("Response data:\n$data")
                                 val result = parseOnvifProbeResponse(data)
                                 if (result.size == 1) {
                                     val probeMatch = result.first()
-                                    val xaddrs = probeMatch.xaddrs?.split(" ") ?: emptyList()
-                                    for (endpoint in xaddrs) {
-                                        if (getSystemDateAndTime(endpoint)) {
-                                            onDiscover(
-                                                DiscoveredOnvifDevice(
-                                                    address = probeMatch.endpointReference.address,
-                                                    types = probeMatch.types?.split(" ") ?: emptyList(),
-                                                    scopes = probeMatch.scopes?.split(" ") ?: emptyList(),
-                                                    uri = endpoint,
-                                                )
-                                            )
-                                            break
-                                        }
-                                    }
+                                    onDiscover(
+                                        DiscoveredOnvifDevice(
+                                            id = probeMatch.endpointReference.address,
+                                            types = probeMatch.types?.split(" ") ?: emptyList(),
+                                            scopes = probeMatch.scopes?.split(" ") ?: emptyList(),
+                                            addresses = probeMatch.xaddrs?.split(" ")
+                                                ?: emptyList(),
+                                        )
+                                    )
                                 }
                             }
                         }
@@ -173,7 +169,7 @@ public class OnvifDevice internal constructor(
             return address
         }
 
-        private suspend fun getSystemDateAndTime(url: String): Boolean {
+        public suspend fun isReachableEndpoint(url: String): Boolean {
             HttpClient().use { client ->
                 val response = client.post(url) {
                     contentType(soapContentType)

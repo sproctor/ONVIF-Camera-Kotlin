@@ -2,13 +2,15 @@ package com.seanproctor.onvifdemo
 
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import com.ivanempire.lighthouse.LighthouseClient
 import com.seanproctor.onvifcamera.OnvifDevice
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
 import io.ktor.client.plugins.logging.*
 
 fun main(args: Array<String>) {
-    val viewModel = MainViewModel()
+    val lighthouseClient = LighthouseClient()
+    val viewModel = MainViewModel(lighthouseClient)
     println("starting")
     Napier.base(DebugAntilog())
     OnvifDevice.setLogger(

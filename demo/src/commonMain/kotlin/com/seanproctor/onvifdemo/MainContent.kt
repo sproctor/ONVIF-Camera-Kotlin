@@ -50,11 +50,14 @@ fun MainContent(viewModel: MainViewModel) {
     ) { padding ->
         if (snapshot == null) {
             Column(Modifier.padding(padding)) {
-                val discoveredDevices by viewModel.discoveredDevices.collectAsState()
+                val discoveredDevices by viewModel.discoveredDevices.collectAsState(emptyList())
                 LazyColumn {
-                    items(discoveredDevices.toList()) {
-                        Box(Modifier.fillMaxWidth().clickable { viewModel.address.value = it.second }) {
-                            Text(it.first)
+                    items(
+                        items = discoveredDevices,
+                        key = { it.id },
+                    ) {
+                        Box(Modifier.fillMaxWidth().clickable { viewModel.address.value = it.host }) {
+                            Text(it.friendlyName ?: it.id)
                         }
                     }
                 }
