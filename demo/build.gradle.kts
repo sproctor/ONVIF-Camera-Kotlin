@@ -6,11 +6,7 @@ plugins {
 
 kotlin {
     android()
-    jvm {
-        compilations.all {
-            kotlinOptions.jvmTarget = "11"
-        }
-    }
+    jvm()
 
     sourceSets {
         val commonMain by getting {
@@ -52,6 +48,8 @@ kotlin {
             }
         }
     }
+
+    jvmToolchain(11)
 }
 
 android {
@@ -67,6 +65,10 @@ android {
         getByName("release") {
             isMinifyEnabled = false
         }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 }
 

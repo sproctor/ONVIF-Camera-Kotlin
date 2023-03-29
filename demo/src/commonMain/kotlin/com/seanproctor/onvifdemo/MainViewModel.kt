@@ -5,6 +5,7 @@ import com.ivanempire.lighthouse.LighthouseClient
 import com.seanproctor.onvifcamera.DiscoveredOnvifDevice
 import com.seanproctor.onvifcamera.OnvifDevice
 import com.seanproctor.onvifcamera.customDigest
+import com.seanproctor.onvifcamera.network.OnvifDiscoveryManager
 import dev.icerock.moko.mvvm.viewmodel.ViewModel
 import io.github.aakira.napier.Napier
 import io.ktor.client.HttpClient
@@ -26,16 +27,15 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.plus
 
 class MainViewModel(
-    private val lighthouseClient: LighthouseClient
+    private val lighthouseClient: LighthouseClient,
+    private val onvifDiscoveryManager: OnvifDiscoveryManager,
 ) : ViewModel() {
 
-    private var discoverJob: Job? = null
+    private var wsDiscoverJob: Job? = null
+    private var ssdpDiscoverJob: Job? = null
 
     val address = mutableStateOf("")
     val login = mutableStateOf("")
@@ -67,44 +67,50 @@ class MainViewModel(
     }
 
     fun startDiscovery() {
-        discoverJob?.cancel()
+        stopDiscovery()
         Napier.i { "Starting discovery" }
-        discoverJob = viewModelScope.launch(Dispatchers.IO) {
-            OnvifDevice.discoverDevices { device ->
-                viewModelScope.launch(Dispatchers.IO) {
-                    Napier.i("Found device: $device")
-                    device.addresses
-                        .firstOrNull { OnvifDevice.isReachableEndpoint(it) }
-                        ?.let {
-                            onvifDevices.value = onvifDevices.value + (Url(it).host to device)
-                        }
-                }
-            }
-        }
-        lighthouseClient.discoverDevices()
-            .onEach { ssdpDevices ->
-                ssdpDevices.forEach {
-                    if (!this.ssdpDevices.value.containsKey(it.uuid)) {
-                        try {
-                            val detailedDevice = lighthouseClient.retrieveDescription(it)
-                            val info = CameraInformation(
-                                friendlyName = detailedDevice.friendlyName,
-                                id = it.uuid,
-                                host = it.location.host,
-                            )
-                            this.ssdpDevices.value = this.ssdpDevices.value + (it.uuid to info)
-                        } catch (e: Throwable) {
-                            // Ignore exceptions
-                        }
+        wsDiscoverJob = viewModelScope.launch(Dispatchers.IO) {
+            onvifDiscoveryManager.discoverDevices(2).collect { newDevices ->
+                newDevices.forEach { newDevice ->
+                    if (!onvifDevices.value.any { it.value.id == newDevice.id }) {
+                        Napier.i("Found device: $newDevice")
+                        newDevice.addresses
+                            .firstOrNull { OnvifDevice.isReachableEndpoint(it) }
+                            ?.let {
+                                onvifDevices.value = onvifDevices.value + (Url(it).host to newDevice)
+                            }
                     }
                 }
             }
-            .launchIn(viewModelScope + Dispatchers.IO)
+        }
+
+        ssdpDiscoverJob = viewModelScope.launch(Dispatchers.IO) {
+            lighthouseClient.discoverDevices()
+                .collect { newDevices ->
+                    newDevices.forEach {
+                        if (!ssdpDevices.value.containsKey(it.uuid)) {
+                            try {
+                                val detailedDevice = lighthouseClient.retrieveDescription(it)
+                                val info = CameraInformation(
+                                    friendlyName = detailedDevice.friendlyName,
+                                    id = it.uuid,
+                                    host = it.location.host,
+                                )
+                                ssdpDevices.value = ssdpDevices.value + (it.uuid to info)
+                            } catch (e: Throwable) {
+                                // Ignore exceptions
+                            }
+                        }
+                    }
+                }
+        }
     }
 
     fun stopDiscovery() {
-        discoverJob?.cancel()
-        discoverJob = null
+        wsDiscoverJob?.cancel()
+        wsDiscoverJob = null
+        ssdpDiscoverJob?.cancel()
+        ssdpDiscoverJob = null
     }
 
     fun connectClicked() {

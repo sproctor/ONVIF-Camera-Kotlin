@@ -1,6 +1,5 @@
 package com.seanproctor.onvifcamera
 
-import com.benasher44.uuid.uuid4
 import com.seanproctor.onvifcamera.OnvifCommands.deviceInformationCommand
 import com.seanproctor.onvifcamera.OnvifCommands.getSnapshotURICommand
 import com.seanproctor.onvifcamera.OnvifCommands.getStreamURICommand
@@ -21,17 +20,7 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HeaderValueParam
 import io.ktor.http.contentType
-import io.ktor.network.selector.SelectorManager
-import io.ktor.network.sockets.Datagram
-import io.ktor.network.sockets.InetSocketAddress
-import io.ktor.network.sockets.SocketAddress
-import io.ktor.network.sockets.aSocket
-import io.ktor.utils.io.core.ByteReadPacket
-import io.ktor.utils.io.core.toByteArray
 import io.ktor.utils.io.core.use
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 
 /**
  * @author Remy Virin on 04/03/2018.
@@ -103,70 +92,6 @@ public class OnvifDevice internal constructor(
             )
             val serviceAddresses = parseOnvifServices(result)
             return OnvifDevice(username, password, serviceAddresses, debug)
-        }
-
-        public suspend fun discoverDevices(onDiscover: (DiscoveredOnvifDevice) -> Unit) {
-            coroutineScope {
-                try {
-                    val address = sendProbe()
-                    val selectorManager = SelectorManager(Dispatchers.IO)
-                    val serverSocket = aSocket(selectorManager).udp().bind(address)
-
-                    val discoveredAddresses = mutableListOf<SocketAddress>()
-                    while (true) {
-                        val input = serverSocket.incoming.receive()
-                        logger?.log("received response")
-                        if (!discoveredAddresses.contains(input.address)) {
-                            discoveredAddresses.add(input.address)
-                            launch {
-                                val data = input.packet.readText()
-                                logger?.log("Response data:\n$data")
-                                val result = parseOnvifProbeResponse(data)
-                                if (result.size == 1) {
-                                    val probeMatch = result.first()
-                                    onDiscover(
-                                        DiscoveredOnvifDevice(
-                                            id = probeMatch.endpointReference.address,
-                                            types = probeMatch.types?.split(" ") ?: emptyList(),
-                                            scopes = probeMatch.scopes?.split(" ") ?: emptyList(),
-                                            addresses = probeMatch.xaddrs?.split(" ")
-                                                ?: emptyList(),
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                    }
-                } catch (e: Exception) {
-                    logger?.log(e.stackTraceToString())
-                }
-            }
-        }
-
-        private suspend fun sendProbe(): SocketAddress {
-            val selectorManager = SelectorManager(Dispatchers.IO)
-            val clientSocket = aSocket(selectorManager)
-                .udp()
-                .connect(
-                    remoteAddress = InetSocketAddress("239.255.255.250", 3702),
-                    configure = {
-                        broadcast = true
-                    }
-                )
-            val messageId = uuid4()
-            val data = OnvifCommands.probeCommand(messageId.toString())
-            val datagram = Datagram(
-                packet = ByteReadPacket(data.toByteArray()),
-                address = InetSocketAddress("239.255.255.250", 3702)
-            )
-            logger?.log("Sending broadcast")
-            clientSocket.send(datagram)
-            logger?.log("Sent broadcast")
-            val address = clientSocket.localAddress
-            kotlin.runCatching {
-                clientSocket.close()
-            }
-            return address
         }
 
         public suspend fun isReachableEndpoint(url: String): Boolean {

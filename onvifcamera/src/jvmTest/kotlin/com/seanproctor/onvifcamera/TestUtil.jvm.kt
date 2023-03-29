@@ -1,7 +1,8 @@
 package com.seanproctor.onvifcamera
 
-fun readResourceFile(filename: String): ByteArray {
+actual fun readResourceFile(filename: String): String {
     return ClassLoader
         .getSystemResourceAsStream(filename)!!
         .readBytes()
+        .decodeToString()
 }
