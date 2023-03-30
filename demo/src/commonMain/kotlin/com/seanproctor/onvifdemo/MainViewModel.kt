@@ -2,7 +2,6 @@ package com.seanproctor.onvifdemo
 
 import androidx.compose.runtime.mutableStateOf
 import com.ivanempire.lighthouse.LighthouseClient
-import com.seanproctor.onvifcamera.DiscoveredOnvifDevice
 import com.seanproctor.onvifcamera.OnvifDevice
 import com.seanproctor.onvifcamera.customDigest
 import com.seanproctor.onvifcamera.network.OnvifDiscoveryManager
@@ -22,20 +21,18 @@ import io.ktor.client.request.get
 import io.ktor.http.Url
 import io.ktor.utils.io.core.use
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 
 class MainViewModel(
     private val lighthouseClient: LighthouseClient,
     private val onvifDiscoveryManager: OnvifDiscoveryManager,
 ) : ViewModel() {
-
-    private var wsDiscoverJob: Job? = null
-    private var ssdpDiscoverJob: Job? = null
 
     val address = mutableStateOf("")
     val login = mutableStateOf("")
@@ -53,65 +50,46 @@ class MainViewModel(
     private val _image = MutableStateFlow<ByteArray?>(null)
     val image = _image.asStateFlow()
 
-    private val onvifDevices = MutableStateFlow<Map<String, DiscoveredOnvifDevice>>(emptyMap())
-    private val ssdpDevices = MutableStateFlow<Map<String, CameraInformation>>(emptyMap())
-
-    val discoveredDevices: Flow<List<CameraInformation>> = combine(onvifDevices, ssdpDevices) { onvifDevices, ssdpDevices ->
-        onvifDevices.entries.map { onvifEntry ->
-            val ssdpDevice = ssdpDevices.entries.firstOrNull() { ssdpEntry ->
-                onvifEntry.value.addresses.any { Url(it).host == ssdpEntry.value.host }
-            }?.value
-            val friendlyName = ssdpDevice?.friendlyName
-            CameraInformation(friendlyName, onvifEntry.value.id, onvifEntry.key)
-        }
-    }
-
-    fun startDiscovery() {
-        stopDiscovery()
-        Napier.i { "Starting discovery" }
-        wsDiscoverJob = viewModelScope.launch(Dispatchers.IO) {
-            onvifDiscoveryManager.discoverDevices(2).collect { newDevices ->
-                newDevices.forEach { newDevice ->
-                    if (!onvifDevices.value.any { it.value.id == newDevice.id }) {
-                        Napier.i("Found device: $newDevice")
-                        newDevice.addresses
-                            .firstOrNull { OnvifDevice.isReachableEndpoint(it) }
-                            ?.let {
-                                onvifDevices.value = onvifDevices.value + (Url(it).host to newDevice)
-                            }
-                    }
-                }
-            }
-        }
-
-        ssdpDiscoverJob = viewModelScope.launch(Dispatchers.IO) {
-            lighthouseClient.discoverDevices()
-                .collect { newDevices ->
-                    newDevices.forEach {
-                        if (!ssdpDevices.value.containsKey(it.uuid)) {
-                            try {
-                                val detailedDevice = lighthouseClient.retrieveDescription(it)
-                                val info = CameraInformation(
-                                    friendlyName = detailedDevice.friendlyName,
-                                    id = it.uuid,
-                                    host = it.location.host,
-                                )
-                                ssdpDevices.value = ssdpDevices.value + (it.uuid to info)
-                            } catch (e: Throwable) {
-                                // Ignore exceptions
-                            }
+    val discoveredDevices: Flow<List<CameraInformation>> = flow {
+        val cachedOnvifDevices = mutableMapOf<String, OnvifCachedDevice>()
+        val friendlyNameMap = mutableMapOf<String, String>()
+        combine(
+            onvifDiscoveryManager.discoverDevices(2),
+            lighthouseClient.discoverDevices(),
+        ) { onvifDevices, ssdpDevices ->
+            onvifDevices.mapNotNull { onvifDevice ->
+                var friendlyName = onvifDevice.id
+                val cachedOnvifDevice = cachedOnvifDevices[onvifDevice.id]
+                val endpoint = cachedOnvifDevice?.endpoint
+                    ?: onvifDevice.addresses
+                        .firstOrNull { OnvifDevice.isReachableEndpoint(it) }
+                        ?.also { endpoint ->
+                            cachedOnvifDevices[onvifDevice.id] =
+                                OnvifCachedDevice(onvifDevice.addresses.map { Url(it).host }, endpoint)
+                        }
+                    ?: return@mapNotNull null
+                val ssdpFriendlyName = friendlyNameMap.getOrElse(onvifDevice.id) {
+                    ssdpDevices.firstNotNullOfOrNull { ssdpDevice ->
+                        if (onvifDevice.addresses.any { Url(it).host == ssdpDevice.location.host }) {
+                            val detailedDevice = lighthouseClient.retrieveDescription(ssdpDevice)
+                            friendlyNameMap[onvifDevice.id] = detailedDevice.friendlyName
+                            detailedDevice.friendlyName
+                        } else {
+                            null
                         }
                     }
                 }
+                if (ssdpFriendlyName != null) {
+                    friendlyName = ssdpFriendlyName
+                }
+                CameraInformation(friendlyName, onvifDevice.id, endpoint)
+            }
         }
+            .collect {
+                emit(it)
+            }
     }
-
-    fun stopDiscovery() {
-        wsDiscoverJob?.cancel()
-        wsDiscoverJob = null
-        ssdpDiscoverJob?.cancel()
-        ssdpDiscoverJob = null
-    }
+        .flowOn(Dispatchers.IO)
 
     fun connectClicked() {
         val address = address.value.trim()
@@ -205,3 +183,5 @@ class MainViewModel(
 }
 
 data class CameraInformation(val friendlyName: String?, val id: String, val host: String)
+
+data class OnvifCachedDevice(val hosts: List<String>, val endpoint: String)

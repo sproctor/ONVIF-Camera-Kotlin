@@ -24,6 +24,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 
@@ -50,19 +53,32 @@ fun MainContent(viewModel: MainViewModel) {
     ) { padding ->
         if (snapshot == null) {
             Column(Modifier.padding(padding)) {
-                val discoveredDevices by viewModel.discoveredDevices.collectAsState(emptyList())
-                LazyColumn {
-                    items(
-                        items = discoveredDevices,
-                        key = { it.id },
-                    ) {
-                        Box(Modifier.fillMaxWidth().clickable { viewModel.address.value = it.host }) {
-                            Text(it.friendlyName ?: it.id)
+                var scanning by remember { mutableStateOf(false) }
+                if (scanning) {
+                    val discoveredDevices by viewModel.discoveredDevices.collectAsState(emptyList())
+                    LazyColumn {
+                        items(
+                            items = discoveredDevices,
+                            key = { it.id },
+                        ) {
+                            Box(
+                                Modifier.fillMaxWidth()
+                                    .clickable {
+                                        scanning = false
+                                        viewModel.address.value = it.host
+                                    }
+                            ) {
+                                Text(it.friendlyName ?: it.id)
+                            }
                         }
                     }
-                }
-                Button(onClick = { viewModel.startDiscovery() }) {
-                    Text("Scan")
+                    Button(onClick = { scanning = false }) {
+                        Text("Cancel")
+                    }
+                } else {
+                    Button(onClick = { scanning = true }) {
+                        Text("Scan")
+                    }
                 }
 
                 val address by viewModel.address
