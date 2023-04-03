@@ -65,7 +65,10 @@ class MainViewModel(
                         .firstOrNull { OnvifDevice.isReachableEndpoint(it) }
                         ?.also { endpoint ->
                             cachedOnvifDevices[onvifDevice.id] =
-                                OnvifCachedDevice(onvifDevice.addresses.map { Url(it).host }, endpoint)
+                                OnvifCachedDevice(
+                                    onvifDevice.addresses.map { Url(it).host },
+                                    endpoint
+                                )
                         }
                     ?: return@mapNotNull null
                 val ssdpFriendlyName = friendlyNameMap.getOrElse(onvifDevice.id) {
@@ -101,7 +104,10 @@ class MainViewModel(
                 try {
                     // Get camera services
                     Napier.d("Requesting device: \"$address\" \"$login\" \"$password\"")
-                    val device = OnvifDevice.requestDevice(address, login, password, true)
+                    val url =
+                        if (address.contains("://")) address
+                        else "http://$address/onvif/device_service"
+                    val device = OnvifDevice.requestDevice(url, login, password, true)
                     this@MainViewModel.device = device
 
                     // Display camera specs
@@ -171,7 +177,7 @@ class MainViewModel(
                     }
                 } catch (e: Exception) {
                     Napier.d("Got an error: ${e.message}", e)
-                    _errorText.value = e.message ?: "Uknown error"
+                    _errorText.value = e.message ?: "Unknown error"
                 }
             }
         }

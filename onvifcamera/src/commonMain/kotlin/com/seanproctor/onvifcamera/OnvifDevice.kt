@@ -73,18 +73,13 @@ public class OnvifDevice internal constructor(
         }
 
         public suspend fun requestDevice(
-            address: String,
+            url: String,
             username: String?,
             password: String?,
             debug: Boolean = false,
         ): OnvifDevice {
-            val endpoint = if (address.contains(":")) {
-                address
-            } else {
-                "http://$address/onvif/device_service"
-            }
             val result = execute(
-                endpoint,
+                url,
                 servicesCommand,
                 username,
                 password,
