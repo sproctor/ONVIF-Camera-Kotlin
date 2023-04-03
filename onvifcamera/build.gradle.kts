@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.seanproctor"
-version = "1.7.0"
+version = "1.8.0"
 
 kotlin {
     android {
@@ -31,6 +31,7 @@ kotlin {
                 implementation("org.slf4j:slf4j-api:_")
                 implementation("org.jetbrains.kotlinx:atomicfu:_")
                 implementation("io.ktor:ktor-network:_")
+                implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5")
 
                 implementation("com.benasher44:uuid:_")
             }
