@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope"
+    xmlns:sc="http://www.w3.org/2003/05/soap-encoding" xmlns:trt="http://www.onvif.org/ver10/media/wsdl"
+    xmlns:tt="http://www.onvif.org/ver10/schema">
+    <s:Header />
+    <s:Body>
+        <trt:GetProfilesResponse>
+            <trt:Profiles fixed="true" token="MediaProfile00000">
+                <tt:Name>MediaProfile_Channel1_MainStream</tt:Name>
+                <tt:VideoSourceConfiguration token="00000">
+                    <tt:Name>VideoSourceConfig_Channel1</tt:Name>
+                    <tt:UseCount>2</tt:UseCount>
+                    <tt:SourceToken>00000</tt:SourceToken>
+                    <tt:Bounds height="1536" width="2048" x="0" y="0" />
+                    <tt:Extension>
+                        <tt:Rotate>
+                            <tt:Mode>OFF</tt:Mode>
+                        </tt:Rotate>
+                    </tt:Extension>
+                </tt:VideoSourceConfiguration>
+                <tt:VideoEncoderConfiguration token="00000">
+                    <tt:Name>VideoEncoderConfig_Channel1_MainStream</tt:Name>
+                    <tt:UseCount>1</tt:UseCount>
+                    <tt:Encoding>H264</tt:Encoding>
+                    <tt:Resolution>
+                        <tt:Width>2592</tt:Width>
+                        <tt:Height>1944</tt:Height>
+                    </tt:Resolution>
+                    <tt:Quality>4.000000</tt:Quality>
+                    <tt:RateControl>
+                        <tt:FrameRateLimit>20</tt:FrameRateLimit>
+                        <tt:EncodingInterval>1</tt:EncodingInterval>
+                        <tt:BitrateLimit>6144</tt:BitrateLimit>
+                    </tt:RateControl>
+                    <tt:H264>
+                        <tt:GovLength>40</tt:GovLength>
+                        <tt:H264Profile>Main</tt:H264Profile>
+                    </tt:H264>
+                    <tt:Multicast>
+                        <tt:Address>
+                            <tt:Type>IPv4</tt:Type>
+                            <tt:IPv4Address>224.1.0.0</tt:IPv4Address>
+                        </tt:Address>
+                        <tt:Port>40000</tt:Port>
+                        <tt:TTL>64</tt:TTL>
+                        <tt:AutoStart>false</tt:AutoStart>
+                    </tt:Multicast>
+                    <tt:SessionTimeout>PT60S</tt:SessionTimeout>
+                </tt:VideoEncoderConfiguration>
+                <tt:VideoAnalyticsConfiguration token="00000">
+                    <tt:Name>AnalyticsConfig_Channel1</tt:Name>
+                    <tt:UseCount>2</tt:UseCount>
+                    <tt:AnalyticsEngineConfiguration>
+                        <tt:AnalyticsModule Name="MyCellMotion" Type="tt:CellMotionEngine">
+                            <tt:Parameters>
+                                <tt:SimpleItem Name="Sensitivity" Value="60" />
+                                <tt:ElementItem Name="Layout">
+                                    <tt:CellLayout Columns="22" Rows="18">
+                                        <tt:Transformation>
+                                            <tt:Translate x="-1" y="-1" />
+                                            <tt:Scale x="0.0062500000000000003"
+                                                y="0.0083400000000000002" />
+                                        </tt:Transformation>
+                                    </tt:CellLayout>
+                                </tt:ElementItem>
+                            </tt:Parameters>
+                        </tt:AnalyticsModule>
+                    </tt:AnalyticsEngineConfiguration>
+                    <tt:RuleEngineConfiguration>
+                        <tt:Rule Name="Region1" Type="tt:CellMotionDetector">
+                            <tt:Parameters>
+                                <tt:SimpleItem Name="MinCount" Value="20" />
+                                <tt:SimpleItem Name="AlarmOnDelay" Value="1000" />
+                                <tt:SimpleItem Name="AlarmOffDelay" Value="1000" />
+                                <tt:SimpleItem Name="ActiveCells" Value="0P8A8A==" />
+                            </tt:Parameters>
+                        </tt:Rule>
+                    </tt:RuleEngineConfiguration>
+                </tt:VideoAnalyticsConfiguration>
+                <tt:MetadataConfiguration CompressionType="" token="00000">
+                    <tt:Name>MetadataConfig_Channel1</tt:Name>
+                    <tt:UseCount>2</tt:UseCount>
+                    <tt:PTZStatus>
+                        <tt:Status>false</tt:Status>
+                        <tt:Position>false</tt:Position>
+                    </tt:PTZStatus>
+                    <tt:Events>
+                        <tt:Filter>
+                            <wsnt:TopicExpression
+                                xmlns:tns1="http://www.onvif.org/ver10/topics"
+                                xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2"
+                                Dialect="http://www.onvif.org/ver10/tev/topicExpression/ConcreteSet">
+                                tns1:RuleEngine/CellMotionDetector/Motion
+                            </wsnt:TopicExpression>
+                        </tt:Filter>
+                    </tt:Events>
+                    <tt:Analytics>true</tt:Analytics>
+                    <tt:Multicast>
+                        <tt:Address>
+                            <tt:Type>IPv4</tt:Type>
+                            <tt:IPv4Address>224.2.0.0</tt:IPv4Address>
+                        </tt:Address>
+                        <tt:Port>40020</tt:Port>
+                        <tt:TTL>64</tt:TTL>
+                        <tt:AutoStart>false</tt:AutoStart>
+                    </tt:Multicast>
+                    <tt:SessionTimeout>PT60S</tt:SessionTimeout>
+                </tt:MetadataConfiguration>
+            </trt:Profiles>
+            <trt:Profiles fixed="true" token="MediaProfile00001">
+                <tt:Name>MediaProfile_Channel1_SubStream1</tt:Name>
+                <tt:VideoSourceConfiguration token="00000">
+                    <tt:Name>VideoSourceConfig_Channel1</tt:Name>
+                    <tt:UseCount>2</tt:UseCount>
+                    <tt:SourceToken>00000</tt:SourceToken>
+                    <tt:Bounds height="1536" width="2048" x="0" y="0" />
+                    <tt:Extension>
+                        <tt:Rotate>
+                            <tt:Mode>OFF</tt:Mode>
+                        </tt:Rotate>
+                    </tt:Extension>
+                </tt:VideoSourceConfiguration>
+                <tt:VideoEncoderConfiguration token="00001">
+                    <tt:Name>VideoEncoderConfig_Channel1_SubStream1</tt:Name>
+                    <tt:UseCount>1</tt:UseCount>
+                    <tt:Encoding>H264</tt:Encoding>
+                    <tt:Resolution>
+                        <tt:Width>704</tt:Width>
+                        <tt:Height>480</tt:Height>
+                    </tt:Resolution>
+                    <tt:Quality>4.000000</tt:Quality>
+                    <tt:RateControl>
+                        <tt:FrameRateLimit>20</tt:FrameRateLimit>
+                        <tt:EncodingInterval>1</tt:EncodingInterval>
+                        <tt:BitrateLimit>512</tt:BitrateLimit>
+                    </tt:RateControl>
+                    <tt:H264>
+                        <tt:GovLength>40</tt:GovLength>
+                        <tt:H264Profile>Main</tt:H264Profile>
+                    </tt:H264>
+                    <tt:Multicast>
+                        <tt:Address>
+                            <tt:Type>IPv4</tt:Type>
+                            <tt:IPv4Address>224.1.0.1</tt:IPv4Address>
+                        </tt:Address>
+                        <tt:Port>40008</tt:Port>
+                        <tt:TTL>64</tt:TTL>
+                        <tt:AutoStart>false</tt:AutoStart>
+                    </tt:Multicast>
+                    <tt:SessionTimeout>PT60S</tt:SessionTimeout>
+                </tt:VideoEncoderConfiguration>
+                <tt:VideoAnalyticsConfiguration token="00000">
+                    <tt:Name>AnalyticsConfig_Channel1</tt:Name>
+                    <tt:UseCount>2</tt:UseCount>
+                    <tt:AnalyticsEngineConfiguration>
+                        <tt:AnalyticsModule Name="MyCellMotion" Type="tt:CellMotionEngine">
+                            <tt:Parameters>
+                                <tt:SimpleItem Name="Sensitivity" Value="60" />
+                                <tt:ElementItem Name="Layout">
+                                    <tt:CellLayout Columns="22" Rows="18">
+                                        <tt:Transformation>
+                                            <tt:Translate x="-1" y="-1" />
+                                            <tt:Scale x="0.0062500000000000003"
+                                                y="0.0083400000000000002" />
+                                        </tt:Transformation>
+                                    </tt:CellLayout>
+                                </tt:ElementItem>
+                            </tt:Parameters>
+                        </tt:AnalyticsModule>
+                    </tt:AnalyticsEngineConfiguration>
+                    <tt:RuleEngineConfiguration>
+                        <tt:Rule Name="Region1" Type="tt:CellMotionDetector">
+                            <tt:Parameters>
+                                <tt:SimpleItem Name="MinCount" Value="20" />
+                                <tt:SimpleItem Name="AlarmOnDelay" Value="1000" />
+                                <tt:SimpleItem Name="AlarmOffDelay" Value="1000" />
+                                <tt:SimpleItem Name="ActiveCells" Value="0P8A8A==" />
+                            </tt:Parameters>
+                        </tt:Rule>
+                    </tt:RuleEngineConfiguration>
+                </tt:VideoAnalyticsConfiguration>
+                <tt:MetadataConfiguration CompressionType="" token="00000">
+                    <tt:Name>MetadataConfig_Channel1</tt:Name>
+                    <tt:UseCount>2</tt:UseCount>
+                    <tt:PTZStatus>
+                        <tt:Status>false</tt:Status>
+                        <tt:Position>false</tt:Position>
+                    </tt:PTZStatus>
+                    <tt:Events>
+                        <tt:Filter>
+                            <wsnt:TopicExpression
+                                xmlns:tns1="http://www.onvif.org/ver10/topics"
+                                xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2"
+                                Dialect="http://www.onvif.org/ver10/tev/topicExpression/ConcreteSet">
+                                tns1:RuleEngine/CellMotionDetector/Motion
+                            </wsnt:TopicExpression>
+                        </tt:Filter>
+                    </tt:Events>
+                    <tt:Analytics>true</tt:Analytics>
+                    <tt:Multicast>
+                        <tt:Address>
+                            <tt:Type>IPv4</tt:Type>
+                            <tt:IPv4Address>224.2.0.0</tt:IPv4Address>
+                        </tt:Address>
+                        <tt:Port>40020</tt:Port>
+                        <tt:TTL>64</tt:TTL>
+                        <tt:AutoStart>false</tt:AutoStart>
+                    </tt:Multicast>
+                    <tt:SessionTimeout>PT60S</tt:SessionTimeout>
+                </tt:MetadataConfiguration>
+            </trt:Profiles>
+        </trt:GetProfilesResponse>
+    </s:Body>
+</s:Envelope>

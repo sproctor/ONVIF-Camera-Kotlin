@@ -6,7 +6,6 @@ import com.seanproctor.onvifcamera.OnvifCommands.getStreamURICommand
 import com.seanproctor.onvifcamera.OnvifCommands.profilesCommand
 import com.seanproctor.onvifcamera.OnvifCommands.servicesCommand
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BasicAuthCredentials
 import io.ktor.client.plugins.auth.providers.DigestAuthCredentials
@@ -17,10 +16,12 @@ import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HeaderValueParam
 import io.ktor.http.contentType
 import io.ktor.utils.io.core.use
+import io.ktor.utils.io.errors.IOException
 
 /**
  * @author Remy Virin on 04/03/2018.
@@ -90,12 +91,16 @@ public class OnvifDevice internal constructor(
         }
 
         public suspend fun isReachableEndpoint(url: String): Boolean {
-            HttpClient().use { client ->
-                val response = client.post(url) {
-                    contentType(soapContentType)
-                    setBody(OnvifCommands.getSystemDateAndTimeCommand)
+            try {
+                HttpClient().use { client ->
+                    val response = client.post(url) {
+                        contentType(soapContentType)
+                        setBody(OnvifCommands.getSystemDateAndTimeCommand)
+                    }
+                    return response.status.value in 200..299
                 }
-                return response.status.value in 200..299
+            } catch (e: IOException) {
+                return false
             }
         }
 
@@ -133,7 +138,7 @@ public class OnvifDevice internal constructor(
                     setBody(body)
                 }
                 if (response.status.value in 200..299) {
-                    return response.body()
+                    return response.bodyAsText()
                 } else {
                     throw when (response.status.value) {
                         401 -> OnvifUnauthorized("Unauthorized")
