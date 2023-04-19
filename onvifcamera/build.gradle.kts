@@ -29,7 +29,6 @@ kotlin {
                 implementation("io.ktor:ktor-client-auth:_")
                 implementation("io.ktor:ktor-client-logging:_")
                 implementation("org.slf4j:slf4j-api:_")
-                implementation("org.jetbrains.kotlinx:atomicfu:_")
                 implementation("io.ktor:ktor-network:_")
                 implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5")
 
@@ -43,8 +42,6 @@ kotlin {
             }
         }
     }
-
-    jvmToolchain(11)
 }
 
 android {
@@ -61,6 +58,9 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+    }
+    kotlin {
+        jvmToolchain(11)
     }
 }
 

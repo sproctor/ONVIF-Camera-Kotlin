@@ -3,7 +3,6 @@ package com.seanproctor.onvifdemo
 import androidx.compose.runtime.mutableStateOf
 import com.ivanempire.lighthouse.LighthouseClient
 import com.seanproctor.onvifcamera.OnvifDevice
-import com.seanproctor.onvifcamera.customDigest
 import com.seanproctor.onvifcamera.network.OnvifDiscoveryManager
 import dev.icerock.moko.mvvm.viewmodel.ViewModel
 import io.github.aakira.napier.Napier
@@ -13,6 +12,7 @@ import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BasicAuthCredentials
 import io.ktor.client.plugins.auth.providers.DigestAuthCredentials
 import io.ktor.client.plugins.auth.providers.basic
+import io.ktor.client.plugins.auth.providers.digest
 import io.ktor.client.plugins.logging.DEFAULT
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
@@ -153,7 +153,7 @@ class MainViewModel(
                                 BasicAuthCredentials(username = username, password = password)
                             }
                         }
-                        customDigest {
+                        digest {
                             credentials {
                                 DigestAuthCredentials(username = username, password = password)
                             }

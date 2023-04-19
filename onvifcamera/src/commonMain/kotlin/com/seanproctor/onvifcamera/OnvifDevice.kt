@@ -10,6 +10,7 @@ import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BasicAuthCredentials
 import io.ktor.client.plugins.auth.providers.DigestAuthCredentials
 import io.ktor.client.plugins.auth.providers.basic
+import io.ktor.client.plugins.auth.providers.digest
 import io.ktor.client.plugins.logging.DEFAULT
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
@@ -119,7 +120,7 @@ public class OnvifDevice internal constructor(
                                 BasicAuthCredentials(username = username, password = password)
                             }
                         }
-                        customDigest {
+                        digest {
                             credentials {
                                 DigestAuthCredentials(username = username, password = password)
                             }
