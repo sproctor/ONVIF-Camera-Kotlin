@@ -58,3 +58,7 @@ allprojects {
         }
     }
 }
+
+tasks.wrapper {
+    gradleVersion = "8.2.1"
+}
