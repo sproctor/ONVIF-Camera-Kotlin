@@ -16,3 +16,9 @@ plugins {
 
 include(":onvifcamera")
 include(":demo")
+
+// work-around https://github.com/Splitties/refreshVersions/issues/640
+refreshVersions {
+    file("build/tmp/refreshVersions").mkdirs()
+    versionsPropertiesFile = file("build/tmp/refreshVersions/versions.properties")
+}

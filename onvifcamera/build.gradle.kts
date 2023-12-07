@@ -1,8 +1,8 @@
 plugins {
-    kotlin("multiplatform")
-    id("com.android.library")
-    kotlin("plugin.serialization")
-    id("com.vanniktech.maven.publish.base")
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.vanniktech.maven.publish.base)
 }
 
 group = "com.seanproctor"
@@ -20,17 +20,16 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                api(KotlinX.coroutines.core)
+                api(libs.kotlinx.coroutines.core)
 
-                implementation("io.github.pdvrieze.xmlutil:serialization:_")
-                implementation("io.github.pdvrieze.xmlutil:serialutil:_")
+                implementation(libs.xmlutil.serialization)
+                implementation(libs.xmlutil.serialutil)
 
-                implementation("io.ktor:ktor-client-core:_")
-                implementation("io.ktor:ktor-client-auth:_")
-                implementation("io.ktor:ktor-client-logging:_")
-                implementation("org.slf4j:slf4j-api:_")
-                implementation("io.ktor:ktor-network:_")
-                implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5")
+                implementation(libs.ktor.client.core)
+                implementation(libs.ktor.client.auth)
+                implementation(libs.ktor.client.logging)
+                implementation(libs.ktor.network)
+                implementation(libs.kotlinx.collections.immutable)
             }
         }
 

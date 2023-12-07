@@ -1,7 +1,7 @@
 plugins {
-    id("com.android.application")
-    kotlin("multiplatform")
-    id("org.jetbrains.compose")
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.jetbrains.compose)
 }
 
 kotlin {
@@ -13,10 +13,10 @@ kotlin {
             dependencies {
                 implementation(project(":onvifcamera"))
 
-                implementation("io.ktor:ktor-client-core:_")
-                implementation("io.ktor:ktor-client-cio:_")
-                implementation("io.ktor:ktor-client-auth:_")
-                implementation("io.ktor:ktor-client-logging:_")
+                implementation(libs.ktor.client.core)
+                implementation(libs.ktor.client.cio)
+                implementation(libs.ktor.client.auth)
+                implementation(libs.ktor.client.logging)
 
                 // Compose dependencies
                 implementation(compose.runtime)
@@ -24,22 +24,22 @@ kotlin {
                 implementation(compose.material)
 
                 // MOKO ModelView
-                api("dev.icerock.moko:mvvm-core:_")
-                api("dev.icerock.moko:mvvm-flow:_")
+                api(libs.mvvm.core)
+                api(libs.mvvm.flow)
 
                 // Logging
-                implementation("io.github.aakira:napier:_")
+                implementation(libs.napier)
 
                 // SSDP
-                implementation("com.seanproctor:lighthouse:_")
+                implementation(libs.lighthouse)
             }
         }
         val androidMain by getting {
             dependencies {
                 // Android presentation components
-                implementation(AndroidX.activity.compose)
-                implementation("androidx.lifecycle:lifecycle-viewmodel-compose:_")
-                implementation("dev.icerock.moko:mvvm-flow-compose:_")
+                implementation(libs.androidx.activity.compose)
+                implementation(libs.lifecycle.viewmodel.compose)
+                implementation(libs.mvvm.flow.compose)
             }
         }
         val jvmMain by getting {
