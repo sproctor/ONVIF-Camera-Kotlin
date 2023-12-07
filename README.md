@@ -6,7 +6,7 @@ Kotlin MPP.
 Install with Gradle (must have mavenCentral in repositories):
 
 ```kotlin
-implementation("com.seanproctor:onvifcamera:1.5.0")
+implementation("com.seanproctor:onvifcamera:<VERSION>")
 ```
 
 ## Connect to an Onvif camera and information

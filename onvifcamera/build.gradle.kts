@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.seanproctor"
-version = "1.8.2"
+version = "1.8.3"
 
 kotlin {
     androidTarget {
