@@ -11,18 +11,19 @@ android-library = { id = "com.android.library", version.ref = "agp" }
 
 [versions]
 
-kotlin = "1.9.0"
-androidx-activity = "1.7.2"
-androidx-lifecycle-viewmodel-compose = "2.6.1"
-ktor = "2.3.3"
+kotlin = "1.9.21"
+androidx-activity = "1.8.1"
+androidx-lifecycle-viewmodel-compose = "2.6.2"
+ktor = "2.3.7"
 kotlinx-coroutines = "1.7.3"
-kotlinx-collections-immutable = "0.3.5"
-jetbrains-compose = "1.4.3"
+kotlinx-collections-immutable = "0.3.6"
+jetbrains-compose = "1.5.11"
 vanniktech = "0.25.3"
-agp = "8.1.2"
+agp = "8.2.0"
 mvvm = "0.16.1"
 napier = "2.6.1"
-xmlutil = "0.86.1"
+xmlutil = "0.86.2"
+lighthouse = "0.2.0"
 
 [libraries]
 
@@ -41,7 +42,7 @@ ktor-network = { group = "io.ktor", name = "ktor-network", version.ref = "ktor" 
 
 napier = { group = "io.github.aakira", name = "napier", version.ref = "napier" }
 
-lighthouse = "com.seanproctor:lighthouse:0.2.0"
+lighthouse = { group = "com.seanproctor", name = "lighthouse", version.ref = "lighthouse" }
 
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 
@@ -49,5 +50,3 @@ xmlutil-serialization = { group = "io.github.pdvrieze.xmlutil", name = "serializ
 xmlutil-serialutil = { group = "io.github.pdvrieze.xmlutil", name = "serialutil", version.ref = "xmlutil" }
 
 kotlinx-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "kotlinx-collections-immutable" }
-
-kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test" }
