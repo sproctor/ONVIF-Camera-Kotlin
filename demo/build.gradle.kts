@@ -60,18 +60,10 @@ android {
         versionCode = 1
         versionName = "1.0"
     }
-    buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlin {
-        jvmToolchain(11)
-    }
+}
+
+kotlin {
+    jvmToolchain(17)
 }
 
 compose {
