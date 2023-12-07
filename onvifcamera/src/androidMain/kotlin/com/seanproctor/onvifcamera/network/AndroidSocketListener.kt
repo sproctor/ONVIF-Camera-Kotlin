@@ -2,7 +2,6 @@ package com.seanproctor.onvifcamera.network
 
 import android.net.wifi.WifiManager
 import android.util.Log
-import com.benasher44.uuid.uuid4
 import com.seanproctor.onvifcamera.OnvifCommands
 import io.ktor.utils.io.core.toByteArray
 import kotlinx.coroutines.currentCoroutineContext
@@ -14,6 +13,7 @@ import java.net.DatagramPacket
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.MulticastSocket
+import java.util.UUID
 
 /** Specific implementation of [SocketListener] */
 internal class AndroidSocketListener(
@@ -54,7 +54,7 @@ internal class AndroidSocketListener(
 
         return flow {
             multicastSocket.use {
-                val messageId = uuid4()
+                val messageId = UUID.randomUUID()
                 val requestMessage = OnvifCommands.probeCommand(messageId.toString()).toByteArray()
                 val requestDatagram = DatagramPacket(requestMessage, requestMessage.size, multicastAddress, MULTICAST_PORT)
 

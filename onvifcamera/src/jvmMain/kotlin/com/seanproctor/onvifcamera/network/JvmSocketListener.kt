@@ -1,18 +1,19 @@
 package com.seanproctor.onvifcamera.network
 
-import com.benasher44.uuid.uuid4
 import com.seanproctor.onvifcamera.OnvifCommands
 import io.ktor.utils.io.core.toByteArray
-import java.net.DatagramPacket
-import java.net.InetAddress
-import java.net.InetSocketAddress
-import java.net.MulticastSocket
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.isActive
 import org.slf4j.Logger
+import java.net.DatagramPacket
+import java.net.InetAddress
+import java.net.InetSocketAddress
+import java.net.MulticastSocket
+import java.net.StandardSocketOptions
+import java.util.UUID
 
 /** Specific implementation of [SocketListener] */
 internal class JvmSocketListener(
@@ -27,10 +28,10 @@ internal class JvmSocketListener(
         val multicastSocket = MulticastSocket(null)
         multicastSocket.reuseAddress = true
         multicastSocket.broadcast = true
-        multicastSocket.loopbackMode = true
+        multicastSocket.setOption(StandardSocketOptions.IP_MULTICAST_LOOP, false)
 
         try {
-            multicastSocket.joinGroup(multicastAddress)
+            multicastSocket.joinGroup(InetSocketAddress(multicastAddress, 0), null)
             multicastSocket.bind(InetSocketAddress(MULTICAST_PORT))
             logger?.debug("MulticastSocket has been setup")
         } catch (ex: Exception) {
@@ -46,7 +47,7 @@ internal class JvmSocketListener(
 
         return flow {
             multicastSocket.use {
-                val messageId = uuid4()
+                val messageId = UUID.randomUUID()
                 val requestMessage = OnvifCommands.probeCommand(messageId.toString()).toByteArray()
                 val requestDatagram = DatagramPacket(requestMessage, requestMessage.size, multicastAddress, MULTICAST_PORT)
 
@@ -68,7 +69,7 @@ internal class JvmSocketListener(
         logger?.debug("Releasing resources")
 
         if (!multicastSocket.isClosed) {
-            multicastSocket.leaveGroup(multicastAddress)
+            multicastSocket.leaveGroup(InetSocketAddress(multicastAddress, 0), null)
             multicastSocket.close()
         }
     }
