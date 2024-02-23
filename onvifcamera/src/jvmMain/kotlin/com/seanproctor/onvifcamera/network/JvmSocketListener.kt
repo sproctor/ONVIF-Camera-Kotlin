@@ -1,23 +1,20 @@
 package com.seanproctor.onvifcamera.network
 
 import com.seanproctor.onvifcamera.OnvifCommands
+import com.seanproctor.onvifcamera.OnvifLogger
 import io.ktor.utils.io.core.toByteArray
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.isActive
-import org.slf4j.Logger
-import java.net.DatagramPacket
-import java.net.InetAddress
-import java.net.InetSocketAddress
-import java.net.MulticastSocket
-import java.net.StandardSocketOptions
-import java.util.UUID
+import java.net.*
+import java.util.*
+import kotlin.io.use
 
 /** Specific implementation of [SocketListener] */
 internal class JvmSocketListener(
-    private val logger: Logger?,
+    private val logger: OnvifLogger?,
 ) : SocketListener {
 
     private val multicastAddress: InetAddress by lazy {

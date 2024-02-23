@@ -1,8 +1,8 @@
 package com.seanproctor.onvifcamera.network
 
-import org.slf4j.Logger
+import com.seanproctor.onvifcamera.OnvifLogger
 
-public fun OnvifDiscoveryManager(logger: Logger? = null): OnvifDiscoveryManager {
+public fun OnvifDiscoveryManager(logger: OnvifLogger? = null): OnvifDiscoveryManager {
     val socketListener = JvmSocketListener(logger)
-    return OnvifDiscoveryManagerImpl(socketListener)
+    return OnvifDiscoveryManagerImpl(socketListener, logger)
 }

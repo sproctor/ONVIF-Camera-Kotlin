@@ -5,24 +5,15 @@ import com.seanproctor.onvifcamera.OnvifCommands.getSnapshotURICommand
 import com.seanproctor.onvifcamera.OnvifCommands.getStreamURICommand
 import com.seanproctor.onvifcamera.OnvifCommands.profilesCommand
 import com.seanproctor.onvifcamera.OnvifCommands.servicesCommand
-import io.ktor.client.HttpClient
-import io.ktor.client.plugins.auth.Auth
-import io.ktor.client.plugins.auth.providers.BasicAuthCredentials
-import io.ktor.client.plugins.auth.providers.DigestAuthCredentials
-import io.ktor.client.plugins.auth.providers.basic
-import io.ktor.client.plugins.auth.providers.digest
-import io.ktor.client.plugins.logging.DEFAULT
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logger
-import io.ktor.client.plugins.logging.Logging
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
-import io.ktor.http.HeaderValueParam
-import io.ktor.http.contentType
-import io.ktor.utils.io.core.use
-import io.ktor.utils.io.errors.IOException
+import io.ktor.client.*
+import io.ktor.client.plugins.auth.*
+import io.ktor.client.plugins.auth.providers.*
+import io.ktor.client.plugins.logging.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.utils.io.core.*
+import io.ktor.utils.io.errors.*
 
 /**
  * @author Remy Virin on 04/03/2018.
@@ -33,33 +24,33 @@ import io.ktor.utils.io.errors.IOException
  * @param namespaceMap a mapping of SOAP services to endpoints
  */
 public class OnvifDevice internal constructor(
-    public val username: String?,
-    public val password: String?,
-    public val namespaceMap: Map<String, String>,
-    public val debug: Boolean,
+    private val username: String?,
+    private val password: String?,
+    private val namespaceMap: Map<String, String>,
+    private val logger: OnvifLogger?,
 ) {
 
     public suspend fun getDeviceInformation(): OnvifDeviceInformation {
         val endpoint = getEndpointForRequest(OnvifRequestType.GetDeviceInformation)
-        val response = execute(endpoint, deviceInformationCommand, username, password, debug)
+        val response = execute(endpoint, deviceInformationCommand, username, password, logger)
         return parseOnvifDeviceInformation(response)
     }
 
     public suspend fun getProfiles(): List<MediaProfile> {
         val endpoint = getEndpointForRequest(OnvifRequestType.GetProfiles)
-        val response = execute(endpoint, profilesCommand, username, password, debug)
+        val response = execute(endpoint, profilesCommand, username, password, logger)
         return parseOnvifProfiles(response)
     }
 
     public suspend fun getStreamURI(profile: MediaProfile): String {
         val endpoint = getEndpointForRequest(OnvifRequestType.GetStreamURI)
-        val response = execute(endpoint, getStreamURICommand(profile), username, password, debug)
+        val response = execute(endpoint, getStreamURICommand(profile), username, password, logger)
         return parseOnvifStreamUri(response)
     }
 
     public suspend fun getSnapshotURI(profile: MediaProfile): String {
         val endpoint = getEndpointForRequest(OnvifRequestType.GetSnapshotURI)
-        val response = execute(endpoint, getSnapshotURICommand(profile), username, password, debug)
+        val response = execute(endpoint, getSnapshotURICommand(profile), username, password, logger)
         return parseOnvifSnapshotUri(response)
     }
 
@@ -68,37 +59,42 @@ public class OnvifDevice internal constructor(
     }
 
     public companion object {
-        private var logger: Logger? = null
-
-        public fun setLogger(logger: Logger) {
-            this.logger = logger
-        }
-
         public suspend fun requestDevice(
             url: String,
             username: String?,
             password: String?,
-            debug: Boolean = false,
+            logger: OnvifLogger? = null,
         ): OnvifDevice {
             val result = execute(
                 url,
                 servicesCommand,
                 username,
                 password,
-                debug
+                logger,
             )
             val serviceAddresses = parseOnvifServices(result)
-            return OnvifDevice(username, password, serviceAddresses, debug)
+            return OnvifDevice(username, password, serviceAddresses, logger)
         }
 
-        public suspend fun isReachableEndpoint(url: String): Boolean {
+        public suspend fun isReachableEndpoint(url: String, logger: OnvifLogger? = null): Boolean {
             try {
-                HttpClient().use { client ->
+                HttpClient {
+                    if (logger != null) {
+                        install(Logging) {
+                            this.logger = object : Logger {
+                                override fun log(message: String) {
+                                    logger.debug(message)
+                                }
+                            }
+                            level = LogLevel.ALL
+                        }
+                    }
+                }.use { client ->
                     val response = client.post(url) {
                         contentType(soapContentType)
                         setBody(OnvifCommands.getSystemDateAndTimeCommand)
                     }
-                    return response.status.value in 200..299
+                    return response.status.isSuccess()
                 }
             } catch (e: IOException) {
                 return false
@@ -110,7 +106,7 @@ public class OnvifDevice internal constructor(
             body: String,
             username: String?,
             password: String?,
-            debug: Boolean,
+            logger: OnvifLogger?,
         ): String {
             HttpClient {
                 if (username != null && password != null) {
@@ -127,9 +123,13 @@ public class OnvifDevice internal constructor(
                         }
                     }
                 }
-                if (debug) {
+                if (logger != null) {
                     install(Logging) {
-                        logger = Logger.DEFAULT
+                        this.logger = object : Logger {
+                            override fun log(message: String) {
+                                logger.debug(message)
+                            }
+                        }
                         level = LogLevel.ALL
                     }
                 }

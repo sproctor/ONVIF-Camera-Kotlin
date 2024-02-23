@@ -3,6 +3,7 @@ package com.seanproctor.onvifdemo
 import androidx.compose.runtime.mutableStateOf
 import com.ivanempire.lighthouse.LighthouseClient
 import com.seanproctor.onvifcamera.OnvifDevice
+import com.seanproctor.onvifcamera.OnvifLogger
 import com.seanproctor.onvifcamera.network.OnvifDiscoveryManager
 import dev.icerock.moko.mvvm.viewmodel.ViewModel
 import io.github.aakira.napier.Napier
@@ -32,6 +33,7 @@ import kotlinx.coroutines.launch
 class MainViewModel(
     private val lighthouseClient: LighthouseClient,
     private val onvifDiscoveryManager: OnvifDiscoveryManager,
+    private val logger: OnvifLogger,
 ) : ViewModel() {
 
     val address = mutableStateOf("")
@@ -107,7 +109,7 @@ class MainViewModel(
                     val url =
                         if (address.contains("://")) address
                         else "http://$address/onvif/device_service"
-                    val device = OnvifDevice.requestDevice(url, login, password, true)
+                    val device = OnvifDevice.requestDevice(url, login, password, logger)
                     this@MainViewModel.device = device
 
                     // Display camera specs

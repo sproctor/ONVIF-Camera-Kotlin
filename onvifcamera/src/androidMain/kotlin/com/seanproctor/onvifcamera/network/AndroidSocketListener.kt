@@ -1,8 +1,8 @@
 package com.seanproctor.onvifcamera.network
 
 import android.net.wifi.WifiManager
-import android.util.Log
 import com.seanproctor.onvifcamera.OnvifCommands
+import com.seanproctor.onvifcamera.OnvifLogger
 import io.ktor.utils.io.core.toByteArray
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
@@ -13,11 +13,13 @@ import java.net.DatagramPacket
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.MulticastSocket
-import java.util.UUID
+import java.util.*
+import kotlin.io.use
 
 /** Specific implementation of [SocketListener] */
 internal class AndroidSocketListener(
     private val wifiManager: WifiManager,
+    private val logger: OnvifLogger? = null,
 ) : SocketListener {
 
     private val multicastLock: WifiManager.MulticastLock by lazy {
@@ -40,16 +42,16 @@ internal class AndroidSocketListener(
         try {
             multicastSocket.joinGroup(multicastAddress)
             multicastSocket.bind(InetSocketAddress(MULTICAST_PORT))
-            Log.d(TAG, "MulticastSocket has been setup")
+            logger?.debug("MulticastSocket has been setup")
         } catch (ex: Exception) {
-            Log.e(TAG, "Could finish setting up the multicast socket and group", ex)
+            logger?.error("Could finish setting up the multicast socket and group", ex)
         }
 
         return multicastSocket
     }
 
     override fun listenForPackets(retryCount: Int): Flow<DatagramPacket> {
-        Log.d(TAG, "Setting up datagram packet flow")
+        logger?.debug("Setting up datagram packet flow")
         val multicastSocket = setupSocket()
 
         return flow {
@@ -73,7 +75,7 @@ internal class AndroidSocketListener(
     }
 
     override fun teardownSocket(multicastSocket: MulticastSocket) {
-        Log.d(TAG, "Releasing resources")
+        logger?.debug("Releasing resources")
 
         if (multicastLock.isHeld) {
             multicastLock.release()
@@ -89,6 +91,5 @@ internal class AndroidSocketListener(
         const val MULTICAST_DATAGRAM_SIZE = 2048
         const val MULTICAST_PORT = 3702
         const val MULTICAST_ADDRESS = "239.255.255.250"
-        const val TAG = "AndroidSocketListener"
     }
 }

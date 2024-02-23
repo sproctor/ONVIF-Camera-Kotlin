@@ -1,6 +1,6 @@
 package com.seanproctor.onvifcamera
 
-public object OnvifCommands {
+internal object OnvifCommands {
     /**
      * The header for SOAP 1.2 with digest authentication
      */
@@ -19,7 +19,7 @@ public object OnvifCommands {
                     + envelopeEnd
             )
 
-    public fun getStreamURICommand(profile: MediaProfile, protocol: String = "RTSP"): String {
+    internal fun getStreamURICommand(profile: MediaProfile, protocol: String = "RTSP"): String {
         return (soapHeader
                 + "<GetStreamUri xmlns=\"http://www.onvif.org/ver20/media/wsdl\">"
                 + "<ProfileToken>${profile.token}</ProfileToken>"
@@ -29,7 +29,7 @@ public object OnvifCommands {
                 )
     }
 
-    public fun getSnapshotURICommand(profile: MediaProfile): String {
+    internal fun getSnapshotURICommand(profile: MediaProfile): String {
         return (soapHeader + "<GetSnapshotUri xmlns=\"http://www.onvif.org/ver20/media/wsdl\">"
                 + "<ProfileToken>${profile.token}</ProfileToken>"
                 + "</GetSnapshotUri>" + envelopeEnd)
