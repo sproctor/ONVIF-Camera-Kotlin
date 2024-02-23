@@ -11,18 +11,18 @@ android-library = { id = "com.android.library", version.ref = "agp" }
 
 [versions]
 
-kotlin = "1.9.21"
-androidx-activity = "1.8.1"
-androidx-lifecycle-viewmodel-compose = "2.6.2"
-ktor = "2.3.7"
-kotlinx-coroutines = "1.7.3"
-kotlinx-collections-immutable = "0.3.6"
-jetbrains-compose = "1.5.11"
-vanniktech = "0.25.3"
-agp = "8.2.0"
+kotlin = "1.9.22"
+androidx-activity = "1.8.2"
+androidx-lifecycle-viewmodel-compose = "2.7.0"
+ktor = "2.3.8"
+kotlinx-coroutines = "1.8.0"
+kotlinx-collections-immutable = "0.3.7"
+jetbrains-compose = "1.5.12"
+vanniktech = "0.27.0"
+agp = "8.2.2"
 mvvm = "0.16.1"
-napier = "2.6.1"
-xmlutil = "0.86.2"
+napier = "2.7.1"
+xmlutil = "0.86.3"
 lighthouse = "0.2.0"
 
 [libraries]
