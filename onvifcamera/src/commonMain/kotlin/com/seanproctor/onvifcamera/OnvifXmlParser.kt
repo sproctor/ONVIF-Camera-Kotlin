@@ -1,15 +1,17 @@
 package com.seanproctor.onvifcamera
 
-import com.seanproctor.onvifcamera.soap.*
 import com.seanproctor.onvifcamera.soap.Envelope
+import com.seanproctor.onvifcamera.soap.GetDeviceInformationResponse
+import com.seanproctor.onvifcamera.soap.GetProfilesResponse
 import com.seanproctor.onvifcamera.soap.GetServicesResponse
+import com.seanproctor.onvifcamera.soap.GetSnapshotUriResponse
+import com.seanproctor.onvifcamera.soap.GetStreamUriResponse
 import com.seanproctor.onvifcamera.soap.ProbeMatch
 import com.seanproctor.onvifcamera.soap.ProbeMatches
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.serializer
 import nl.adaptivity.xmlutil.ExperimentalXmlUtilApi
-import nl.adaptivity.xmlutil.XmlDeclMode
 import nl.adaptivity.xmlutil.serialization.UnknownChildHandler
 import nl.adaptivity.xmlutil.serialization.XML
 
@@ -22,9 +24,11 @@ private inline fun <reified T : Any> parseSoap(input: String): T {
     }
 
     val xml = XML(module) {
-        xmlDeclMode = XmlDeclMode.Minimal
+        // xmlDeclMode = XmlDeclMode.Minimal
         autoPolymorphic = true
-        unknownChildHandler = UnknownChildHandler { _, _, _, _, _ -> emptyList() }
+        defaultPolicy {
+            unknownChildHandler = UnknownChildHandler { _, _, _, _, _ -> emptyList() }
+        }
     }
     val serializer = serializer<Envelope<T>>()
 

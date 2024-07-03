@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.jetbrains.compose) apply false
+    alias(libs.plugins.compose.compiler) apply false
     alias(libs.plugins.vanniktech.maven.publish.base) apply false
 }
 
@@ -26,11 +27,10 @@ allprojects {
             repositories {
                 maven {
                     name = "testMaven"
-                    url = file("${rootProject.buildDir}/testMaven").toURI()
+                    url = layout.buildDirectory.file("testMaven").get().asFile.toURI()
                 }
             }
         }
-        @Suppress("UnstableApiUsage")
         configure<MavenPublishBaseExtension> {
             publishToMavenCentral(SonatypeHost.S01)
             signAllPublications()
@@ -60,5 +60,5 @@ allprojects {
 }
 
 tasks.wrapper {
-    gradleVersion = "8.6"
+    gradleVersion = "8.8"
 }
