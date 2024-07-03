@@ -4,6 +4,7 @@
 
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 jetbrains-compose = { id = "org.jetbrains.compose", version.ref = "jetbrains-compose" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 vanniktech-maven-publish-base = { id = "com.vanniktech.maven.publish.base", version.ref = "vanniktech" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -11,18 +12,25 @@ android-library = { id = "com.android.library", version.ref = "agp" }
 
 [versions]
 
-kotlin = "1.9.21"
-androidx-activity = "1.8.1"
-androidx-lifecycle-viewmodel-compose = "2.6.2"
-ktor = "2.3.7"
-kotlinx-coroutines = "1.7.3"
-kotlinx-collections-immutable = "0.3.6"
-jetbrains-compose = "1.5.11"
-vanniktech = "0.25.3"
-agp = "8.2.0"
+kotlin = "2.0.0"
+androidx-activity = "1.9.0"
+androidx-lifecycle-viewmodel-compose = "2.8.3"
+ktor = "2.3.12"
+kotlinx-coroutines = "1.8.1"
+kotlinx-collections-immutable = "0.3.7"
+jetbrains-compose = "1.6.11"
+vanniktech = "0.29.0"
+agp = "8.2.2"
+##⬆= "8.3.0"
+##⬆= "8.3.1"
+##⬆= "8.3.2"
+##⬆= "8.4.0"
+##⬆= "8.4.1"
+##⬆= "8.4.2"
+##⬆= "8.5.0"
 mvvm = "0.16.1"
-napier = "2.6.1"
-xmlutil = "0.86.2"
+napier = "2.7.1"
+xmlutil = "0.90.1"
 lighthouse = "0.2.0"
 
 [libraries]

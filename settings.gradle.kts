@@ -10,7 +10,7 @@ pluginManagement {
 }
 
 plugins {
-    id("de.fayard.refreshVersions") version "0.60.3"
+    id("de.fayard.refreshVersions") version "0.60.5"
 }
 
 include(":onvifcamera")
@@ -20,4 +20,7 @@ include(":demo")
 refreshVersions {
     file("build/tmp/refreshVersions").mkdirs()
     versionsPropertiesFile = file("build/tmp/refreshVersions/versions.properties")
+    rejectVersionIf {
+        candidate.stabilityLevel.isLessStableThan(current.stabilityLevel)
+    }
 }
