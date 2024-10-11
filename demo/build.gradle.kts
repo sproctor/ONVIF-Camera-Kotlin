@@ -24,9 +24,7 @@ kotlin {
                 implementation(compose.foundation)
                 implementation(compose.material)
 
-                // MOKO ModelView
-                api(libs.mvvm.core)
-                api(libs.mvvm.flow)
+                implementation(libs.lifecycle.viewmodel.compose)
 
                 // Logging
                 implementation(libs.napier)
@@ -39,8 +37,6 @@ kotlin {
             dependencies {
                 // Android presentation components
                 implementation(libs.androidx.activity.compose)
-                implementation(libs.lifecycle.viewmodel.compose)
-                implementation(libs.mvvm.flow.compose)
             }
         }
         val jvmMain by getting {

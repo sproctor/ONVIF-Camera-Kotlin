@@ -1,34 +1,25 @@
 package com.seanproctor.onvifdemo
 
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.ivanempire.lighthouse.LighthouseClient
 import com.seanproctor.onvifcamera.OnvifDevice
 import com.seanproctor.onvifcamera.OnvifLogger
 import com.seanproctor.onvifcamera.network.OnvifDiscoveryManager
-import dev.icerock.moko.mvvm.viewmodel.ViewModel
 import io.github.aakira.napier.Napier
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.plugins.auth.Auth
-import io.ktor.client.plugins.auth.providers.BasicAuthCredentials
-import io.ktor.client.plugins.auth.providers.DigestAuthCredentials
-import io.ktor.client.plugins.auth.providers.basic
-import io.ktor.client.plugins.auth.providers.digest
-import io.ktor.client.plugins.logging.DEFAULT
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logger
-import io.ktor.client.plugins.logging.Logging
-import io.ktor.client.request.get
-import io.ktor.http.Url
-import io.ktor.utils.io.core.use
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.plugins.auth.*
+import io.ktor.client.plugins.auth.providers.*
+import io.ktor.client.plugins.logging.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.utils.io.core.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlin.collections.set
 
 class MainViewModel(
     private val lighthouseClient: LighthouseClient,
@@ -77,8 +68,11 @@ class MainViewModel(
                     ssdpDevices.firstNotNullOfOrNull { ssdpDevice ->
                         if (onvifDevice.addresses.any { Url(it).host == ssdpDevice.location.host }) {
                             val detailedDevice = lighthouseClient.retrieveDescription(ssdpDevice)
-                            friendlyNameMap[onvifDevice.id] = detailedDevice.friendlyName
-                            detailedDevice.friendlyName
+                                .getOrNull()
+                                ?.also {
+                                    friendlyNameMap[onvifDevice.id] = it.friendlyName
+                                }
+                            detailedDevice?.friendlyName
                         } else {
                             null
                         }

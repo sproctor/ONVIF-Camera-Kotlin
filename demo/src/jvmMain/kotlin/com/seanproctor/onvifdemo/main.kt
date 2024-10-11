@@ -2,27 +2,30 @@ package com.seanproctor.onvifdemo
 
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import com.ivanempire.lighthouse.LighthouseClient
-import com.seanproctor.onvifcamera.OnvifDevice
+import com.ivanempire.lighthouse.lighthouseClient
+import com.seanproctor.onvifcamera.OnvifLogger
 import com.seanproctor.onvifcamera.network.OnvifDiscoveryManager
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
-import io.ktor.client.plugins.logging.Logger
-import org.slf4j.LoggerFactory
 
 fun main() {
-    val lighthouseClient = LighthouseClient()
-    val onvifDiscoveryManager = OnvifDiscoveryManager(LoggerFactory.getLogger("OnvifCamera"))
-    val viewModel = MainViewModel(lighthouseClient, onvifDiscoveryManager)
-    println("starting")
+    val lighthouseClient = lighthouseClient()
     Napier.base(DebugAntilog())
-    OnvifDevice.setLogger(
-        object : Logger {
-            override fun log(message: String) {
-                Napier.i(message)
-            }
+    val logger = object : OnvifLogger {
+        override fun error(message: String) {
+            Napier.e(message)
         }
-    )
+
+        override fun error(message: String, e: Throwable) {
+            Napier.e(message, e)
+        }
+
+        override fun debug(message: String) {
+            Napier.d(message)
+        }
+    }
+    val onvifDiscoveryManager = OnvifDiscoveryManager(logger)
+    val viewModel = MainViewModel(lighthouseClient, onvifDiscoveryManager, logger)
     application {
         Window(
             title = "ONVIF Camera Demo",

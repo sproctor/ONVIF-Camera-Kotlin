@@ -4,11 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.ivanempire.lighthouse.LighthouseClient
+import com.ivanempire.lighthouse.lighthouseClient
 import com.seanproctor.onvifcamera.OnvifLogger
 import com.seanproctor.onvifcamera.network.OnvifDiscoveryManager
-import dev.icerock.moko.mvvm.createViewModelFactory
-import dev.icerock.moko.mvvm.viewmodel.ViewModel
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
 
@@ -36,18 +34,16 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        val lighthouseClient = LighthouseClient(this)
+        val lighthouseClient = lighthouseClient(this)
         val onvifDiscoveryManager = OnvifDiscoveryManager(
             context = this,
             logger = logger,
         )
 
         setContent {
-            val viewModel: MainViewModel = viewModel<ViewModel>(
-                factory = createViewModelFactory {
-                    MainViewModel(lighthouseClient, onvifDiscoveryManager, logger) as ViewModel
-                }
-            ) as MainViewModel
+            val viewModel: MainViewModel = viewModel<MainViewModel> {
+                MainViewModel(lighthouseClient, onvifDiscoveryManager, logger)
+            }
             MainContent(viewModel)
         }
     }
