@@ -80,5 +80,15 @@ internal object OnvifCommands {
             " <SOAP-ENV:Body>" +
             "  <tds:GetSystemDateAndTime/>" +
             " </SOAP-ENV:Body>" +
-            "</SOAP-ENV:Envelope> "
+            "</SOAP-ENV:Envelope>"
+
+    internal val getHostnameCommand = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://www.w3.org/2003/05/soap-envelope"
+                    xmlns:tds="http://www.onvif.org/ver10/device/wsdl">
+                <SOAP-ENV:Body>
+                    <tds:GetHostname/>
+                </SOAP-ENV:Body>
+            </SOAP-ENV:Envelope>
+            """.trimIndent()
 }

@@ -1,13 +1,6 @@
 package com.seanproctor.onvifcamera
 
-import com.seanproctor.onvifcamera.soap.Envelope
-import com.seanproctor.onvifcamera.soap.GetDeviceInformationResponse
-import com.seanproctor.onvifcamera.soap.GetProfilesResponse
-import com.seanproctor.onvifcamera.soap.GetServicesResponse
-import com.seanproctor.onvifcamera.soap.GetSnapshotUriResponse
-import com.seanproctor.onvifcamera.soap.GetStreamUriResponse
-import com.seanproctor.onvifcamera.soap.ProbeMatch
-import com.seanproctor.onvifcamera.soap.ProbeMatches
+import com.seanproctor.onvifcamera.soap.*
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.serializer
@@ -57,6 +50,10 @@ internal fun parseOnvifServices(input: String): Map<String, String> {
     return parseSoap<GetServicesResponse>(input).services.associate {
         it.namespace to it.address
     }
+}
+
+internal fun parseOnvifGetHostnameResponse(input: String): String? {
+    return parseSoap<GetHostnameResponse>(input).hostnameInformation.name
 }
 
 internal fun parseOnvifProbeResponse(input: String): List<ProbeMatch> {

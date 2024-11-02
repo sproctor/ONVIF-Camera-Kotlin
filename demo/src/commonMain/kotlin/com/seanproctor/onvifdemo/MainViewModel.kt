@@ -3,7 +3,6 @@ package com.seanproctor.onvifdemo
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ivanempire.lighthouse.LighthouseClient
 import com.seanproctor.onvifcamera.OnvifDevice
 import com.seanproctor.onvifcamera.OnvifLogger
 import com.seanproctor.onvifcamera.network.OnvifDiscoveryManager
@@ -14,7 +13,6 @@ import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
-import io.ktor.http.*
 import io.ktor.utils.io.core.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -22,8 +20,7 @@ import kotlinx.coroutines.launch
 import kotlin.collections.set
 
 class MainViewModel(
-    private val lighthouseClient: LighthouseClient,
-    private val onvifDiscoveryManager: OnvifDiscoveryManager,
+    onvifDiscoveryManager: OnvifDiscoveryManager,
     private val logger: OnvifLogger,
 ) : ViewModel() {
 
@@ -43,52 +40,34 @@ class MainViewModel(
     private val _image = MutableStateFlow<ByteArray?>(null)
     val image = _image.asStateFlow()
 
-    val discoveredDevices: Flow<List<CameraInformation>> = flow {
-        val cachedOnvifDevices = mutableMapOf<String, OnvifCachedDevice>()
-        val friendlyNameMap = mutableMapOf<String, String>()
-        combine(
-            onvifDiscoveryManager.discoverDevices(2),
-            lighthouseClient.discoverDevices(),
-        ) { onvifDevices, ssdpDevices ->
-            onvifDevices.mapNotNull { onvifDevice ->
-                var friendlyName = onvifDevice.id
-                val cachedOnvifDevice = cachedOnvifDevices[onvifDevice.id]
-                val endpoint = cachedOnvifDevice?.endpoint
-                    ?: onvifDevice.addresses
-                        .firstOrNull { OnvifDevice.isReachableEndpoint(it) }
-                        ?.also { endpoint ->
-                            cachedOnvifDevices[onvifDevice.id] =
-                                OnvifCachedDevice(
-                                    onvifDevice.addresses.map { Url(it).host },
-                                    endpoint
-                                )
-                        }
-                    ?: return@mapNotNull null
-                val ssdpFriendlyName = friendlyNameMap.getOrElse(onvifDevice.id) {
-                    ssdpDevices.firstNotNullOfOrNull { ssdpDevice ->
-                        if (onvifDevice.addresses.any { Url(it).host == ssdpDevice.location.host }) {
-                            val detailedDevice = lighthouseClient.retrieveDescription(ssdpDevice)
-                                .getOrNull()
-                                ?.also {
-                                    friendlyNameMap[onvifDevice.id] = it.friendlyName
+    private val cachedCameras = mutableMapOf<String, CameraInformation>()
+    val discoveredDevices: Flow<List<CameraInformation>> =
+        onvifDiscoveryManager.discoverDevices(2)
+            .map { onvifDevices ->
+                onvifDevices.mapNotNull { onvifDevice ->
+                    // TODO: make this an async call
+                    cachedCameras[onvifDevice.id]
+                        ?: onvifDevice.addresses
+                            .firstOrNull {
+                                try {
+                                    OnvifDevice.isReachableEndpoint(it)
+                                } catch (e: Throwable) {
+                                    false
                                 }
-                            detailedDevice?.friendlyName
-                        } else {
-                            null
-                        }
-                    }
+                            }
+                            ?.let { endpoint ->
+                                CameraInformation(
+                                    id = onvifDevice.id,
+                                    friendlyName = OnvifDevice.getHostname(endpoint, logger),
+                                    host = endpoint,
+                                )
+                            }
+                            ?.also { info ->
+                                cachedCameras[onvifDevice.id] = info
+                            }
                 }
-                if (ssdpFriendlyName != null) {
-                    friendlyName = ssdpFriendlyName
-                }
-                CameraInformation(friendlyName, onvifDevice.id, endpoint)
             }
-        }
-            .collect {
-                emit(it)
-            }
-    }
-        .flowOn(Dispatchers.IO)
+            .flowOn(Dispatchers.IO)
 
     fun connectClicked() {
         val address = address.value.trim()
@@ -185,5 +164,3 @@ class MainViewModel(
 }
 
 data class CameraInformation(val friendlyName: String?, val id: String, val host: String)
-
-data class OnvifCachedDevice(val hosts: List<String>, val endpoint: String)

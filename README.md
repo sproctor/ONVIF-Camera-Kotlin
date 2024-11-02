@@ -1,7 +1,5 @@
 # ONVIF Camera Kotlin
-Example on how to connect to an ONVIF camera on Android, and library to ease the development of an ONVIF on
-Kotlin MPP.
-
+Kotlin MPP implementation of ONVIF discovery for cameras on Android and JVM.
 
 Install with Gradle (must have mavenCentral in repositories):
 
@@ -30,3 +28,7 @@ val snapshotUri = profiles.firstOrNull { it.canSnapshot() }?.let {
     device.getSnapshotURI(it)
 }
 ```
+
+## References
+
+http://www.onvif.org/ver10/device/wsdl/devicemgmt.wsdl

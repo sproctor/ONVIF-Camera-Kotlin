@@ -13,7 +13,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.utils.io.core.*
-import io.ktor.utils.io.errors.*
+import kotlinx.io.IOException
 
 /**
  * @author Remy Virin on 04/03/2018.
@@ -72,6 +72,7 @@ public class OnvifDevice internal constructor(
                 password,
                 logger,
             )
+            logger?.debug("Addresses: $result")
             val serviceAddresses = parseOnvifServices(result)
             return OnvifDevice(username, password, serviceAddresses, logger)
         }
@@ -99,6 +100,17 @@ public class OnvifDevice internal constructor(
             } catch (e: IOException) {
                 return false
             }
+        }
+
+        public suspend fun getHostname(url: String, logger: OnvifLogger? = null): String? {
+            val result = execute(
+                url,
+                OnvifCommands.getHostnameCommand,
+                null,
+                null,
+                logger,
+            )
+            return parseOnvifGetHostnameResponse(result)
         }
 
         internal suspend fun execute(

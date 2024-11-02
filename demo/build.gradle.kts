@@ -28,9 +28,6 @@ kotlin {
 
                 // Logging
                 implementation(libs.napier)
-
-                // SSDP
-                implementation(libs.lighthouse)
             }
         }
         val androidMain by getting {

@@ -2,14 +2,12 @@ package com.seanproctor.onvifdemo
 
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import com.ivanempire.lighthouse.lighthouseClient
 import com.seanproctor.onvifcamera.OnvifLogger
 import com.seanproctor.onvifcamera.network.OnvifDiscoveryManager
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
 
 fun main() {
-    val lighthouseClient = lighthouseClient()
     Napier.base(DebugAntilog())
     val logger = object : OnvifLogger {
         override fun error(message: String) {
@@ -25,7 +23,7 @@ fun main() {
         }
     }
     val onvifDiscoveryManager = OnvifDiscoveryManager(logger)
-    val viewModel = MainViewModel(lighthouseClient, onvifDiscoveryManager, logger)
+    val viewModel = MainViewModel(onvifDiscoveryManager, logger)
     application {
         Window(
             title = "ONVIF Camera Demo",

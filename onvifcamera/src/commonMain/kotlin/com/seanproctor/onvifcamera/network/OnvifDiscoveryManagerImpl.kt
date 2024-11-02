@@ -44,7 +44,7 @@ internal class OnvifDiscoveryManagerImpl(
                                 }
                             }
                         } catch (e: Throwable) {
-                            e.printStackTrace()
+                            logger?.error("Error parsing probe response: $data", e)
                         }
                     }
                 }
