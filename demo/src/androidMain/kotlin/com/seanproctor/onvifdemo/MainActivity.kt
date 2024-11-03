@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.ivanempire.lighthouse.lighthouseClient
 import com.seanproctor.onvifcamera.OnvifLogger
 import com.seanproctor.onvifcamera.network.OnvifDiscoveryManager
 import io.github.aakira.napier.DebugAntilog
@@ -34,7 +33,6 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        val lighthouseClient = lighthouseClient(this)
         val onvifDiscoveryManager = OnvifDiscoveryManager(
             context = this,
             logger = logger,
@@ -42,7 +40,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val viewModel: MainViewModel = viewModel<MainViewModel> {
-                MainViewModel(lighthouseClient, onvifDiscoveryManager, logger)
+                MainViewModel(onvifDiscoveryManager, logger)
             }
             MainContent(viewModel)
         }

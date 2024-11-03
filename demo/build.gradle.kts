@@ -20,9 +20,7 @@ kotlin {
                 implementation(libs.ktor.client.logging)
 
                 // Compose dependencies
-                implementation(compose.runtime)
-                implementation(compose.foundation)
-                implementation(compose.material)
+                implementation(compose.material3)
 
                 implementation(libs.lifecycle.viewmodel.compose)
 

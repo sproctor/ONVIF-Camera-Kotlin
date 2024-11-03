@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
 import kotlin.collections.set
 
 class MainViewModel(
-    onvifDiscoveryManager: OnvifDiscoveryManager,
+    private val onvifDiscoveryManager: OnvifDiscoveryManager,
     private val logger: OnvifLogger,
 ) : ViewModel() {
 
@@ -41,7 +41,7 @@ class MainViewModel(
     val image = _image.asStateFlow()
 
     private val cachedCameras = mutableMapOf<String, CameraInformation>()
-    val discoveredDevices: Flow<List<CameraInformation>> =
+    fun discoverDevices(): Flow<List<CameraInformation>> =
         onvifDiscoveryManager.discoverDevices(2)
             .map { onvifDevices ->
                 onvifDevices.mapNotNull { onvifDevice ->
@@ -51,7 +51,7 @@ class MainViewModel(
                             .firstOrNull {
                                 try {
                                     OnvifDevice.isReachableEndpoint(it)
-                                } catch (e: Throwable) {
+                                } catch (_: Throwable) {
                                     false
                                 }
                             }
@@ -66,6 +66,9 @@ class MainViewModel(
                                 cachedCameras[onvifDevice.id] = info
                             }
                 }
+            }
+            .onCompletion {
+                logger.debug("Stopped scanning")
             }
             .flowOn(Dispatchers.IO)
 
