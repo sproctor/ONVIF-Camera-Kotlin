@@ -24,13 +24,12 @@ import kotlinx.io.IOException
  * @param namespaceMap a mapping of SOAP services to paths
  */
 public class OnvifDevice internal constructor(
-    private val address: String,
+    private val address: Url,
     private val username: String?,
     private val password: String?,
     private val namespaceMap: Map<String, String>,
     private val logger: OnvifLogger?,
 ) {
-
     public suspend fun getDeviceInformation(): OnvifDeviceInformation {
         val endpoint = getEndpointForRequest(OnvifRequestType.GetDeviceInformation)
         val response = execute(endpoint, deviceInformationCommand, username, password, logger)
@@ -46,24 +45,29 @@ public class OnvifDevice internal constructor(
     public suspend fun getStreamURI(profile: MediaProfile): String {
         val endpoint = getEndpointForRequest(OnvifRequestType.GetStreamURI)
         val response = execute(endpoint, getStreamURICommand(profile), username, password, logger)
-        return parseOnvifStreamUri(response)
+        val responseUrl = Url(parseOnvifStreamUri(response))
+        return buildUrl(responseUrl.encodedPath)
     }
 
     public suspend fun getSnapshotURI(profile: MediaProfile): String {
         val endpoint = getEndpointForRequest(OnvifRequestType.GetSnapshotURI)
         val response = execute(endpoint, getSnapshotURICommand(profile), username, password, logger)
-        return parseOnvifSnapshotUri(response)
+        val responseUrl = Url(parseOnvifSnapshotUri(response))
+        return buildUrl(responseUrl.encodedPath)
     }
 
     private fun getEndpointForRequest(requestType: OnvifRequestType): String {
-        val initialUrl = Url(address)
         val path = namespaceMap[requestType.namespace()] ?: throw OnvifServiceUnavailable()
+        return buildUrl(path)
+    }
+
+    private fun buildUrl(path: String): String {
         return URLBuilder().apply {
-            protocol = initialUrl.protocol
-            host = initialUrl.host
+            protocol = address.protocol
+            host = address.host
             encodedPath = path
         }
-            .build().toString()
+            .buildString()
     }
 
     public companion object {
@@ -87,7 +91,7 @@ public class OnvifDevice internal constructor(
                 val url = Url(it.address)
                 it.namespace to url.encodedPath
             }
-            return OnvifDevice(url, username, password, serviceAddresses, logger)
+            return OnvifDevice(Url(url), username, password, serviceAddresses, logger)
         }
 
         public suspend fun isReachableEndpoint(url: String, logger: OnvifLogger? = null): Boolean {
