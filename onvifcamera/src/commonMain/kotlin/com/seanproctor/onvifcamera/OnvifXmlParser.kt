@@ -46,10 +46,8 @@ internal fun parseOnvifSnapshotUri(input: String): String {
     return result.uri
 }
 
-internal fun parseOnvifServices(input: String): Map<String, String> {
-    return parseSoap<GetServicesResponse>(input).services.associate {
-        it.namespace to it.address
-    }
+internal fun parseOnvifServices(input: String): List<OnvifService> {
+    return parseSoap<GetServicesResponse>(input).services
 }
 
 internal fun parseOnvifGetHostnameResponse(input: String): String? {

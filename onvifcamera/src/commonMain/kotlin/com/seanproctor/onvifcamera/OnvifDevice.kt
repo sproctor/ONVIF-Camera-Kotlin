@@ -21,9 +21,10 @@ import kotlinx.io.IOException
  * (getDeviceInformation, getProfiles and getStreamURI).
  * @param username the username to login on the camera
  * @param password the password to login on the camera
- * @param namespaceMap a mapping of SOAP services to endpoints
+ * @param namespaceMap a mapping of SOAP services to paths
  */
 public class OnvifDevice internal constructor(
+    private val address: String,
     private val username: String?,
     private val password: String?,
     private val namespaceMap: Map<String, String>,
@@ -55,7 +56,14 @@ public class OnvifDevice internal constructor(
     }
 
     private fun getEndpointForRequest(requestType: OnvifRequestType): String {
-        return namespaceMap[requestType.namespace()] ?: throw OnvifServiceUnavailable()
+        val initialUrl = Url(address)
+        val path = namespaceMap[requestType.namespace()] ?: throw OnvifServiceUnavailable()
+        return URLBuilder().apply {
+            protocol = initialUrl.protocol
+            host = initialUrl.host
+            encodedPath = path
+        }
+            .build().toString()
     }
 
     public companion object {
@@ -73,8 +81,13 @@ public class OnvifDevice internal constructor(
                 logger,
             )
             logger?.debug("Addresses: $result")
-            val serviceAddresses = parseOnvifServices(result)
-            return OnvifDevice(username, password, serviceAddresses, logger)
+            val services = parseOnvifServices(result)
+            // Work around bug in some cameras that return the incorrect IP address in the services
+            val serviceAddresses = services.associate {
+                val url = Url(it.address)
+                it.namespace to url.encodedPath
+            }
+            return OnvifDevice(url, username, password, serviceAddresses, logger)
         }
 
         public suspend fun isReachableEndpoint(url: String, logger: OnvifLogger? = null): Boolean {
@@ -97,7 +110,7 @@ public class OnvifDevice internal constructor(
                     }
                     return response.status.isSuccess()
                 }
-            } catch (e: IOException) {
+            } catch (_: IOException) {
                 return false
             }
         }
