@@ -11,8 +11,8 @@ class ServicesResponseParserTest {
     fun testServicesResponseParser() {
         val input = readResourceFile("services.xml")
         val result = parseOnvifServices(input)
-        val namespace = result["http://www.onvif.org/ver10/search/wsdl"]
+        val namespace = result.first { it.namespace == "http://www.onvif.org/ver10/search/wsdl" }
         assertNotNull(namespace)
-        assertContains(namespace, "/onvif/services")
+        assertContains(namespace.address, "/onvif/services")
     }
 }
