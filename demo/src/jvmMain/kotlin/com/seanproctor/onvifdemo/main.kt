@@ -10,11 +10,7 @@ import io.github.aakira.napier.Napier
 fun main() {
     Napier.base(DebugAntilog())
     val logger = object : OnvifLogger {
-        override fun error(message: String) {
-            Napier.e(message)
-        }
-
-        override fun error(message: String, e: Throwable) {
+        override fun error(message: String, e: Throwable?) {
             Napier.e(message, e)
         }
 

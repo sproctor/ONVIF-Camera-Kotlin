@@ -16,8 +16,6 @@ allprojects {
         mavenLocal()
         google()
         mavenCentral()
-        maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
-        maven("https://www.jitpack.io")
     }
 
     // Credentials must be added to ~/.gradle/gradle.properties per
@@ -60,5 +58,5 @@ allprojects {
 }
 
 tasks.wrapper {
-    gradleVersion = "8.8"
+    gradleVersion = "8.10.2"
 }
