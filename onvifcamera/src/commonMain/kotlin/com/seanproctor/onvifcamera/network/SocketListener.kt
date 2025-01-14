@@ -26,7 +26,7 @@ internal interface SocketListener {
      * @param retryCount The number of times to send to the probe
      * @return Flow of [DatagramPacket] - each emission represents a single received packet
      */
-    fun listenForPackets(retryCount: Int): Flow<DatagramPacket>
+    fun listenForPackets(retryCount: Int = 0): Flow<DatagramPacket>
 
     /**
      * Tears down the [MulticastSocket] used during device discovery and releases all resources.
