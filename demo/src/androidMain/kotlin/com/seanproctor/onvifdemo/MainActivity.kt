@@ -20,11 +20,8 @@ class MainActivity : ComponentActivity() {
 
         Napier.base(DebugAntilog())
         val logger = object : OnvifLogger {
-            override fun error(message: String) {
-                Napier.e(message)
-            }
 
-            override fun error(message: String, e: Throwable) {
+            override fun error(message: String, e: Throwable?) {
                 Napier.e(message, e)
             }
 
