@@ -65,6 +65,7 @@ public class OnvifDevice internal constructor(
         return URLBuilder().apply {
             protocol = address.protocol
             host = address.host
+            port = address.port
             encodedPath = path
         }
             .buildString()
