@@ -45,15 +45,13 @@ public class OnvifDevice internal constructor(
     public suspend fun getStreamURI(profile: MediaProfile): String {
         val endpoint = getEndpointForRequest(OnvifRequestType.GetStreamURI)
         val response = execute(endpoint, getStreamURICommand(profile), username, password, logger)
-        val responseUrl = Url(parseOnvifStreamUri(response))
-        return buildUrl(responseUrl.encodedPath)
+        return parseOnvifStreamUri(response)
     }
 
     public suspend fun getSnapshotURI(profile: MediaProfile): String {
         val endpoint = getEndpointForRequest(OnvifRequestType.GetSnapshotURI)
         val response = execute(endpoint, getSnapshotURICommand(profile), username, password, logger)
-        val responseUrl = Url(parseOnvifSnapshotUri(response))
-        return buildUrl(responseUrl.encodedPath)
+        return parseOnvifSnapshotUri(response)
     }
 
     private fun getEndpointForRequest(requestType: OnvifRequestType): String {
