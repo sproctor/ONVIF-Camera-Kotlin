@@ -63,6 +63,11 @@ public class OnvifDevice internal constructor(
         return URLBuilder().apply {
             protocol = address.protocol
             host = address.host
+            if ((address.port != 80 || address.protocol != URLProtocol.HTTP) &&
+                (address.port != 443 || address.protocol != URLProtocol.HTTPS)
+            ) {
+                port = address.port
+            }
             encodedPath = path
         }
             .buildString()
