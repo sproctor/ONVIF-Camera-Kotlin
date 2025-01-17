@@ -5,10 +5,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
@@ -27,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import java.net.URI
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,6 +79,19 @@ fun MainContent(viewModel: MainViewModel) {
                             }
                         }
                     )
+
+                is Screen.Stream ->
+                    TopAppBar(
+                        title = { Text("Stream") },
+                        navigationIcon = {
+                            IconButton(onClick = { screen = Screen.Main }) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Close"
+                                )
+                            }
+                        }
+                    )
             }
         }
     ) { padding ->
@@ -100,10 +116,15 @@ fun MainContent(viewModel: MainViewModel) {
                         onCapture = {
                             viewModel.getSnapshot()
                             screen = Screen.Snapshot
+                        },
+                        onStream = {
+                            screen = Screen.Stream
                         }
                     )
 
                 is Screen.Snapshot -> SnapshotContent(viewModel)
+
+                is Screen.Stream -> StreamContent(viewModel)
             }
         }
     }
@@ -225,6 +246,7 @@ fun CameraConnectContent(
 fun CameraDetailsContent(
     viewModel: MainViewModel,
     onCapture: () -> Unit,
+    onStream: () -> Unit,
 ) {
     Column(Modifier.fillMaxSize().padding(16.dp)) {
         val explanationText = viewModel.explanationText.collectAsState().value
@@ -232,12 +254,22 @@ fun CameraDetailsContent(
 
         Spacer(Modifier.weight(1f))
 
-        val snapshotUri = viewModel.snapshotUri.value
-        Button(
-            onClick = onCapture,
-            enabled = snapshotUri != null
-        ) {
-            Text("Capture")
+        Row {
+            val snapshotUri = viewModel.snapshotUri.value
+            Button(
+                onClick = onCapture,
+                enabled = snapshotUri != null
+            ) {
+                Text("Capture")
+            }
+            Spacer(Modifier.width(16.dp))
+            val streamUri = viewModel.streamUri.value
+            Button(
+                onClick = onStream,
+                enabled = streamUri != null
+            ) {
+                Text("Stream")
+            }
         }
     }
 }
@@ -257,6 +289,22 @@ fun SnapshotContent(viewModel: MainViewModel) {
             Text(
                 modifier = Modifier.align(Alignment.Center),
                 text = "Loading image",
+            )
+        }
+    }
+}
+
+@Composable
+fun StreamContent(viewModel: MainViewModel) {
+    val streamUri by viewModel.streamUri
+
+    Box(Modifier.fillMaxSize()) {
+        if (streamUri != null) {
+            RtspPlayer(rtspUrl = streamUri!!, viewModel.login.value, viewModel.password.value)
+        } else {
+            Text(
+                modifier = Modifier.align(Alignment.Center),
+                text = "Error getting stream",
             )
         }
     }

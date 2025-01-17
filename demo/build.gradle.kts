@@ -32,6 +32,9 @@ kotlin {
             dependencies {
                 // Android presentation components
                 implementation(libs.androidx.activity.compose)
+                implementation(libs.exoplayer)
+                implementation(libs.exoplayer.rtsp)
+                implementation(libs.media3.ui)
             }
         }
         val jvmMain by getting {
@@ -44,13 +47,18 @@ kotlin {
 
 android {
     namespace = "com.seanproctor.onvifdemo"
-    compileSdk = 34
+    compileSdk = 35
     defaultConfig {
         applicationId = "com.seanproctor.onvifdemo"
         minSdk = 21
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 

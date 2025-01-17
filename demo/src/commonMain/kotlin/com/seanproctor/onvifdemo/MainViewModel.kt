@@ -28,6 +28,7 @@ class MainViewModel(
     val login = mutableStateOf("")
     val password = mutableStateOf("")
     val snapshotUri = mutableStateOf<String?>(null)
+    val streamUri = mutableStateOf<String?>(null)
 
     private var device: OnvifDevice? = null
 
@@ -101,6 +102,12 @@ class MainViewModel(
                         Napier.d("Getting snapshot URI")
                         device.getSnapshotURI(it).let { uri ->
                             snapshotUri.value = uri
+                        }
+                    }
+                    profiles.firstOrNull { it.canStream() }?.let {
+                        Napier.d("Getting stream URI")
+                        device.getStreamURI(it).let { uri ->
+                            streamUri.value = uri
                         }
                     }
                 } catch (e: Exception) {
