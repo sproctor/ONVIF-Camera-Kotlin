@@ -8,6 +8,7 @@ import kotlinx.collections.immutable.persistentHashMapOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.net.DatagramPacket
 import java.net.InetAddress
 
 internal class OnvifDiscoveryManagerImpl(
@@ -15,7 +16,7 @@ internal class OnvifDiscoveryManagerImpl(
     private val logger: OnvifLogger?,
 ): OnvifDiscoveryManager {
     override fun discoverDevices(retryCount: Int, scope: CoroutineScope): Flow<List<DiscoveredOnvifDevice>> {
-        require(retryCount > 0) { "Retry count must be greater than 0" }
+        require(retryCount >= 0) { "Retry count cannot be negative" }
 
         val discoveredDevices = MutableStateFlow(persistentHashMapOf<InetAddress, DiscoveredOnvifDevice>())
         val job = scope.launch {
@@ -23,9 +24,12 @@ internal class OnvifDiscoveryManagerImpl(
                 .catch { cause ->
                     logger?.error("Error listening for devices", cause)
                 }
-                .collect { packet ->
+                .collect { packet: DatagramPacket ->
                     launch {
-                        val data = packet.data.decodeToString()
+                        val data = packet.data.decodeToString(
+                            startIndex = packet.offset,
+                            endIndex = packet.offset + packet.length,
+                        )
                         try {
                             val result = parseOnvifProbeResponse(data)
                             if (result.size == 1) {
