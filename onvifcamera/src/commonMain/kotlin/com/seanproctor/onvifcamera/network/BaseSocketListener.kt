@@ -31,7 +31,9 @@ internal abstract class BaseSocketListener(
         val multicastSocket = MulticastSocket(null)
         multicastSocket.reuseAddress = true
         multicastSocket.broadcast = true
-        multicastSocket.setOption(StandardSocketOptions.IP_MULTICAST_LOOP, false)
+        multicastSocket.loopbackMode = true
+        // The following isn't available on Android until SDK 33
+        // multicastSocket.setOption(StandardSocketOptions.IP_MULTICAST_LOOP, false)
 
         try {
             multicastSocket.joinGroup(InetSocketAddress(multicastAddress, 0), null)
@@ -67,7 +69,6 @@ internal abstract class BaseSocketListener(
             while (currentCoroutineContext().isActive && !multicastSocket.isClosed) {
                 val discoveryBuffer = ByteArray(MULTICAST_DATAGRAM_SIZE)
                 val discoveryDatagram = DatagramPacket(discoveryBuffer, discoveryBuffer.size)
-                multicastSocket.receiveBufferSize
                 multicastSocket.receive(discoveryDatagram)
 
                 emit(discoveryDatagram)
