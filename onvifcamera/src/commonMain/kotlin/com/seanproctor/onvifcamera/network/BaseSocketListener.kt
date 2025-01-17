@@ -13,7 +13,6 @@ import java.net.DatagramPacket
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.MulticastSocket
-import java.net.StandardSocketOptions
 import java.util.UUID
 
 /** Specific implementation of [SocketListener] */
@@ -31,6 +30,7 @@ internal abstract class BaseSocketListener(
         val multicastSocket = MulticastSocket(null)
         multicastSocket.reuseAddress = true
         multicastSocket.broadcast = true
+        @Suppress("DEPRECATION")
         multicastSocket.loopbackMode = true
         // The following isn't available on Android until SDK 33
         // multicastSocket.setOption(StandardSocketOptions.IP_MULTICAST_LOOP, false)
