@@ -1,6 +1,5 @@
 package com.seanproctor.onvifdemo
 
-import android.net.Uri
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.compose.runtime.Composable
@@ -13,7 +12,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.rtsp.RtspMediaSource
 import androidx.media3.ui.PlayerView
-import java.net.URI
+import io.ktor.http.*
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -27,33 +26,11 @@ actual fun RtspPlayer(rtspUrl: String, username: String?, password: String?) {
     }
 
     DisposableEffect(Unit) {
-        val uri = URI(rtspUrl)
-        val urlWithCredentials = if (username != null && password != null) {
-            buildString {
-                append(uri.scheme)
-                append("://")
-                append(username)
-                append(":")
-                append(password)
-                append("@")
-                append(uri.host)
-                if (uri.port > 0 && uri.port != 80 && uri.port != 443) {
-                    append(":")
-                    append(uri.port)
-                }
-                append(uri.rawPath)
-                if (uri.rawQuery != null) {
-                    append("?")
-                    append(uri.rawQuery)
-                }
-                if (uri.rawFragment != null) {
-                    append("#")
-                    append(uri.rawFragment)
-                }
-            }
-        } else {
-            rtspUrl
+        val urlWithCredentials = URLBuilder(rtspUrl).apply {
+            user = username
+            this.password = password
         }
+            .buildString()
 
         Log.d("RtspPlayer", "urlWithCredentials: $urlWithCredentials")
 
