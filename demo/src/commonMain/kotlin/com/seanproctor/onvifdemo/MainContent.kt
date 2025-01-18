@@ -2,34 +2,21 @@ package com.seanproctor.onvifdemo
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import java.net.URI
+import io.ktor.http.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -201,26 +188,23 @@ fun CameraConnectContent(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        val address by viewModel.address
         TextField(
-            value = address,
-            onValueChange = { viewModel.address.value = it },
+            value = viewModel.address,
+            onValueChange = { viewModel.address = it },
             label = { Text("Address") },
             singleLine = true,
         )
 
-        val username by viewModel.login
         TextField(
-            value = username,
-            onValueChange = { viewModel.login.value = it },
+            value = viewModel.username,
+            onValueChange = { viewModel.username = it },
             label = { Text("Username") },
             singleLine = true,
         )
 
-        val password by viewModel.password
         TextField(
-            value = password,
-            onValueChange = { viewModel.password.value = it },
+            value = viewModel.password,
+            onValueChange = { viewModel.password = it },
             label = { Text("Password") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -230,14 +214,14 @@ fun CameraConnectContent(
         Spacer(Modifier.weight(1f))
         Button(
             onClick = onConnect,
-            enabled = address.isNotBlank()
+            enabled = viewModel.address.isNotBlank()
         ) {
             Text("Connect")
         }
     }
     LaunchedEffect(cameraInfo) {
         if (cameraInfo != null) {
-            viewModel.address.value = cameraInfo.host
+            viewModel.address = cameraInfo.host
         }
     }
 }
@@ -248,25 +232,30 @@ fun CameraDetailsContent(
     onCapture: () -> Unit,
     onStream: () -> Unit,
 ) {
+
     Column(Modifier.fillMaxSize().padding(16.dp)) {
-        val explanationText = viewModel.explanationText.collectAsState().value
-        Text(explanationText ?: "")
+        SelectionContainer {
+            Column {
+                val explanationText = viewModel.explanationText.collectAsState().value
+                Text(explanationText ?: "")
+                Text("StreamUri: ${viewModel.streamUri}")
+                Text("SnapshotUri: ${viewModel.snapshotUri}")
+            }
+        }
 
         Spacer(Modifier.weight(1f))
 
         Row {
-            val snapshotUri = viewModel.snapshotUri.value
             Button(
                 onClick = onCapture,
-                enabled = snapshotUri != null
+                enabled = viewModel.snapshotUri != null
             ) {
                 Text("Capture")
             }
             Spacer(Modifier.width(16.dp))
-            val streamUri = viewModel.streamUri.value
             Button(
                 onClick = onStream,
-                enabled = streamUri != null
+                enabled = viewModel.streamUri != null
             ) {
                 Text("Stream")
             }
@@ -296,11 +285,19 @@ fun SnapshotContent(viewModel: MainViewModel) {
 
 @Composable
 fun StreamContent(viewModel: MainViewModel) {
-    val streamUri by viewModel.streamUri
+    val streamUri = viewModel.streamUri
 
     Box(Modifier.fillMaxSize()) {
         if (streamUri != null) {
-            RtspPlayer(rtspUrl = streamUri!!, viewModel.login.value, viewModel.password.value)
+            val streamUrl = URLBuilder(streamUri).apply {
+                user = viewModel.username
+                password = viewModel.password
+            }
+                .buildString()
+            Column(Modifier.fillMaxSize()) {
+                Text("Stream URL: $streamUrl")
+                StreamPlayer(url = streamUrl, modifier = Modifier.fillMaxWidth().weight(1f))
+            }
         } else {
             Text(
                 modifier = Modifier.align(Alignment.Center),

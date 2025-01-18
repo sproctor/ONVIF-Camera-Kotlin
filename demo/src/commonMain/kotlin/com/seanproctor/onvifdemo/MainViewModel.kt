@@ -1,6 +1,8 @@
 package com.seanproctor.onvifdemo
 
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.seanproctor.onvifcamera.OnvifDevice
@@ -17,18 +19,17 @@ import io.ktor.utils.io.core.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlin.collections.set
 
 class MainViewModel(
     private val onvifDiscoveryManager: OnvifDiscoveryManager,
     private val logger: OnvifLogger,
 ) : ViewModel() {
 
-    val address = mutableStateOf("")
-    val login = mutableStateOf("")
-    val password = mutableStateOf("")
-    val snapshotUri = mutableStateOf<String?>(null)
-    val streamUri = mutableStateOf<String?>(null)
+    var address by mutableStateOf("")
+    var username by mutableStateOf("")
+    var password by mutableStateOf("")
+    var snapshotUri by mutableStateOf<String?>(null)
+    var streamUri by mutableStateOf<String?>(null)
 
     private var device: OnvifDevice? = null
 
@@ -74,19 +75,19 @@ class MainViewModel(
             .flowOn(Dispatchers.IO)
 
     fun connectClicked() {
-        val address = address.value.trim()
-        val login = login.value.trim()
-        val password = password.value.trim()
+        val address = address.trim()
+        val username = username.trim()
+        val password = password.trim()
 
         if (address.isNotEmpty()) {
             viewModelScope.launch(Dispatchers.IO) {
                 try {
                     // Get camera services
-                    Napier.d("Requesting device: \"$address\" \"$login\" \"$password\"")
+                    Napier.d("Requesting device: \"$address\" \"$username\" \"$password\"")
                     val url =
                         if (address.contains("://")) address
                         else "http://$address/onvif/device_service"
-                    val device = OnvifDevice.requestDevice(url, login, password, logger)
+                    val device = OnvifDevice.requestDevice(url, username, password, logger)
                     this@MainViewModel.device = device
 
                     // Display camera specs
@@ -101,13 +102,13 @@ class MainViewModel(
                     profiles.firstOrNull { it.canSnapshot() }?.let {
                         Napier.d("Getting snapshot URI")
                         device.getSnapshotURI(it).let { uri ->
-                            snapshotUri.value = uri
+                            snapshotUri = uri
                         }
                     }
                     profiles.firstOrNull { it.canStream() }?.let {
                         Napier.d("Getting stream URI")
                         device.getStreamURI(it).let { uri ->
-                            streamUri.value = uri
+                            streamUri = uri
                         }
                     }
                 } catch (e: Exception) {
@@ -125,9 +126,9 @@ class MainViewModel(
     }
 
     fun getSnapshot() {
-        val username = login.value
-        val password = password.value
-        val url = snapshotUri.value ?: return
+        val username = username
+        val password = password
+        val url = snapshotUri ?: return
 
         viewModelScope.launch(Dispatchers.IO) {
             HttpClient {
