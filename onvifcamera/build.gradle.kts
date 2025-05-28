@@ -17,16 +17,10 @@ kotlin {
         publishLibraryVariants("release")
     }
     jvm()
-    js {
-        browser()
-        useEsModules()
-    }
-    wasmJs {
-        browser()
-    }
-    iosX64()
-    iosArm64()
-    iosSimulatorArm64()
+    // Need to change the interfaces and implement sockets on ios first
+//    iosX64()
+//    iosArm64()
+//    iosSimulatorArm64()
 
     explicitApi()
 
