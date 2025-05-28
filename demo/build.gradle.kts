@@ -9,6 +9,8 @@ kotlin {
     androidTarget()
     jvm()
 
+    jvmToolchain(17)
+
     sourceSets {
         val commonMain by getting {
             dependencies {
@@ -21,6 +23,7 @@ kotlin {
 
                 // Compose dependencies
                 implementation(compose.material3)
+                implementation(libs.material.icons)
 
                 implementation(libs.lifecycle.viewmodel.compose)
 
@@ -61,10 +64,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-}
-
-kotlin {
-    jvmToolchain(17)
 }
 
 compose {
