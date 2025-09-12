@@ -12,7 +12,7 @@ kotlin {
     jvmToolchain(17)
 
     sourceSets {
-        val commonMain by getting {
+        commonMain {
             dependencies {
                 implementation(project(":onvifcamera"))
 
@@ -31,7 +31,7 @@ kotlin {
                 implementation(libs.napier)
             }
         }
-        val androidMain by getting {
+        androidMain {
             dependencies {
                 // Android presentation components
                 implementation(libs.androidx.activity.compose)
@@ -40,7 +40,7 @@ kotlin {
                 implementation(libs.media3.ui)
             }
         }
-        val jvmMain by getting {
+        jvmMain {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.vlcj)
@@ -51,11 +51,11 @@ kotlin {
 
 android {
     namespace = "com.seanproctor.onvifdemo"
-    compileSdk = 35
+    compileSdk = 36
     defaultConfig {
         applicationId = "com.seanproctor.onvifdemo"
         minSdk = 21
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
     }

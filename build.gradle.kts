@@ -1,11 +1,10 @@
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
-import com.vanniktech.maven.publish.SonatypeHost
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform) apply false
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.android.application) apply false
-    alias(libs.plugins.android.library) apply false
+    alias(libs.plugins.android.kotlin.multiplatform.library) apply false
     alias(libs.plugins.jetbrains.compose) apply false
     alias(libs.plugins.compose.compiler) apply false
     alias(libs.plugins.vanniktech.maven.publish.base) apply false
@@ -30,7 +29,7 @@ allprojects {
             }
         }
         configure<MavenPublishBaseExtension> {
-            publishToMavenCentral(SonatypeHost.S01)
+            publishToMavenCentral(automaticRelease = true)
             signAllPublications()
             pom {
                 name.set("ONVIF Camera Kotlin")
@@ -58,5 +57,5 @@ allprojects {
 }
 
 tasks.wrapper {
-    gradleVersion = "8.12.1"
+    gradleVersion = "8.14.3"
 }

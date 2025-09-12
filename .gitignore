@@ -41,3 +41,4 @@ app/.attach_pid*
 **/*.swp
 app/release/*
 **/*.hprof
+**/.kotlin
