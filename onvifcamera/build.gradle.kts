@@ -13,6 +13,7 @@ kotlin {
         minSdk = 21
         compileSdk = 36
         namespace = "com.seanproctor.onvifcamera"
+        withHostTest { }
     }
     jvm()
     // Need to change the interfaces and implement sockets on ios first
