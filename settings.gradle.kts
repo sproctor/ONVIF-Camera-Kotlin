@@ -14,6 +14,7 @@ plugins {
 
 include(":onvifcamera")
 include(":demo")
+include(":androidDemo")
 
 // work-around https://github.com/Splitties/refreshVersions/issues/640
 refreshVersions {

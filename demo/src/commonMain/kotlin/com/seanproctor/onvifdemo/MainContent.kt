@@ -82,7 +82,10 @@ fun MainContent(viewModel: MainViewModel) {
             }
         }
     ) { padding ->
-        Box(Modifier.padding(padding)) {
+        Box(Modifier
+            .padding(padding)
+            .consumeWindowInsets(padding)
+        ) {
             when (val currentScreen = screen) {
                 Screen.Main -> CameraListContent(
                     viewModel = viewModel,

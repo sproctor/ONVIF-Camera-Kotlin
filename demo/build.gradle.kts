@@ -2,13 +2,18 @@ import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.android.application)
+    alias(libs.plugins.android.kotlin.multiplatform.library)
     alias(libs.plugins.jetbrains.compose)
     alias(libs.plugins.compose.compiler)
 }
 
 kotlin {
-    androidTarget()
+    android {
+        namespace = "com.seanproctor.onvifcamera.demo"
+        minSdk = 23
+        compileSdk = 36
+        withHostTest { }
+    }
     jvm()
 
     jvmToolchain(17)
@@ -16,7 +21,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(project(":onvifcamera"))
+                api(project(":onvifcamera"))
 
                 implementation(libs.ktor.client.core)
                 implementation(libs.ktor.client.cio)
@@ -63,23 +68,6 @@ kotlin {
                 }
             }
         }
-    }
-}
-
-android {
-    namespace = "com.seanproctor.onvifdemo"
-    compileSdk = 36
-    defaultConfig {
-        applicationId = "com.seanproctor.onvifdemo"
-        minSdk = 23
-        targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
