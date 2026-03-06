@@ -1,3 +1,5 @@
+import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
+
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.application)
@@ -43,7 +45,22 @@ kotlin {
         jvmMain {
             dependencies {
                 implementation(compose.desktop.currentOs)
-                implementation(libs.javacv)
+                implementation(libs.kotlinx.coroutines.swing)
+                implementation(libs.ffmpeg)
+
+                // Platform-specific natives based on current OS
+                val currentOs = DefaultNativePlatform.getCurrentOperatingSystem()
+                val ffmpegVersion = libs.versions.ffmpeg.get()
+                when {
+                    currentOs.isLinux ->
+                        runtimeOnly("org.bytedeco:ffmpeg:${ffmpegVersion}:linux-x86_64")
+                    currentOs.isWindows ->
+                        runtimeOnly("org.bytedeco:ffmpeg:${ffmpegVersion}:windows-x86_64")
+                    currentOs.isMacOsX -> {
+                        runtimeOnly("org.bytedeco:ffmpeg:${ffmpegVersion}:macosx-x86_64")
+                        runtimeOnly("org.bytedeco:ffmpeg:${ffmpegVersion}:macosx-arm64")
+                    }
+                }
             }
         }
     }
