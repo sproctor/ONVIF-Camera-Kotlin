@@ -16,10 +16,7 @@ include(":onvifcamera")
 include(":demo")
 include(":androidDemo")
 
-// work-around https://github.com/Splitties/refreshVersions/issues/640
 refreshVersions {
-    file("build/tmp/refreshVersions").mkdirs()
-    versionsPropertiesFile = file("build/tmp/refreshVersions/versions.properties")
     rejectVersionIf {
         candidate.stabilityLevel.isLessStableThan(current.stabilityLevel)
     }

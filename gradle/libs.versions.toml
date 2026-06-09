@@ -12,17 +12,19 @@ android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.
 
 [versions]
 
-agp = "9.1.0"
+agp = "9.0.1"
 androidx-activity = "1.12.4"
+##             ⬆ = "1.13.0"
+compose-material3 = "1.9.0"
 ffmpeg = "8.0.1-1.5.13"
-jetbrains-compose = "1.10.2"
-kotlin = "2.3.10"
-kotlinx-coroutines = "1.10.2"
-kotlinx-collections-immutable = "0.4.0"
-ktor = "3.4.1"
-lifecycle-viewmodel-compose = "2.9.6"
+jetbrains-compose = "1.11.1"
+kotlin = "2.4.0"
+kotlinx-coroutines = "1.11.0"
+kotlinx-collections-immutable = "0.5.0"
+ktor = "3.5.0"
+lifecycle-viewmodel-compose = "2.10.0"
 material-icons = "1.7.3"
-media3 = "1.9.2"
+media3 = "1.10.1"
 napier = "2.7.1"
 vanniktech = "0.36.0"
 xmlutil = "0.91.3"
@@ -30,6 +32,7 @@ xmlutil = "0.91.3"
 [libraries]
 
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "androidx-activity" }
+compose-material3 = { group = "org.jetbrains.compose.material3", name = "material3", version.ref = "compose-material3" }
 exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3" }
 exoplayer-rtsp = { group = "androidx.media3", name = "media3-exoplayer-rtsp", version.ref = "media3" }
 ffmpeg = { module = "org.bytedeco:ffmpeg", version.ref = "ffmpeg" }
