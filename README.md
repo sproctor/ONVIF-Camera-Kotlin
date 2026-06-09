@@ -1,5 +1,5 @@
 # ONVIF Camera Kotlin
-Kotlin MPP implementation of ONVIF discovery for cameras on Android and JVM.
+Kotlin Multiplatform implementation of ONVIF discovery for cameras on Android and JVM.
 
 Install with Gradle (must have mavenCentral in repositories):
 
@@ -22,7 +22,7 @@ val device = OnvifDevice.requestDevice("IP_ADDRESS:PORT", "login", "pwd")
 val profiles = device.getProfiles()
 
 val streamUri = profiles.firstOrNull { it.canStream() }?.let {
-    device.getStreamURI(it, addCredentials = true)
+    device.getStreamURI(it)
 }
 val snapshotUri = profiles.firstOrNull { it.canSnapshot() }?.let { 
     device.getSnapshotURI(it)
