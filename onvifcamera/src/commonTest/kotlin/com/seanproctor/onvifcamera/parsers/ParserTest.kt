@@ -32,6 +32,14 @@ class ParserTest {
         val input = readResourceFile("profiles.xml")
         val result = parseOnvifProfiles(input)
         assertEquals(2, result.size)
+        assertEquals(listOf(1920 to 1080, 1920 to 1080), result.map { it.width to it.height })
+    }
+
+    @Test
+    fun testProfilesResolutionDistinguishesSubStream() {
+        val result = parseOnvifProfiles(readResourceFile("profiles2.xml"))
+        val video = result.filter { it.canStream() }
+        assertEquals(listOf(2592 to 1944, 704 to 480), video.map { it.width to it.height })
     }
 
     @Test

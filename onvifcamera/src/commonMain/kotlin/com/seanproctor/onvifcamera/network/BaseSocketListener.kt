@@ -9,10 +9,14 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.isActive
+import java.io.IOException
 import java.net.DatagramPacket
+import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.MulticastSocket
+import java.net.NetworkInterface
+import java.net.SocketException
 import java.util.UUID
 
 /** Specific implementation of [SocketListener] */
@@ -36,8 +40,12 @@ internal abstract class BaseSocketListener(
         // multicastSocket.setOption(StandardSocketOptions.IP_MULTICAST_LOOP, false)
 
         try {
-            multicastSocket.joinGroup(InetSocketAddress(multicastAddress, 0), null)
-            multicastSocket.bind(InetSocketAddress(MULTICAST_PORT))
+            // Probe matches are unicast back to the port the probe was sent from, so
+            // use an ephemeral one. Port 3702 itself is usually taken on a desktop
+            // (wsdd on Linux, the WSD service on Windows), and the OS hands unicast
+            // replies to that more specific binding instead of to us. Joining the
+            // group is not needed either: only replies to our own probe are used.
+            multicastSocket.bind(InetSocketAddress(0))
             logger?.debug("MulticastSocket has been setup")
         } catch (ex: Exception) {
             logger?.error("Could finish setting up the multicast socket and group", ex)
@@ -60,9 +68,21 @@ internal abstract class BaseSocketListener(
                 MULTICAST_PORT
             )
 
+            // The default multicast route is often not the camera's network (docker
+            // and VM bridges, VPNs), so probe on every interface that can multicast.
+            val interfaces = multicastInterfaces()
             repeat(1 + retryCount) {
-                if (!multicastSocket.isClosed) {
-                    multicastSocket.send(requestDatagram)
+                if (interfaces.isEmpty()) {
+                    if (!multicastSocket.isClosed) multicastSocket.send(requestDatagram)
+                }
+                for (networkInterface in interfaces) {
+                    if (multicastSocket.isClosed) break
+                    try {
+                        multicastSocket.networkInterface = networkInterface
+                        multicastSocket.send(requestDatagram)
+                    } catch (e: IOException) {
+                        logger?.debug("Could not probe on ${networkInterface.name}: ${e.message}")
+                    }
                 }
             }
 
@@ -78,13 +98,23 @@ internal abstract class BaseSocketListener(
             .onCompletion { teardownSocket(multicastSocket) }
     }
 
+    private fun multicastInterfaces(): List<NetworkInterface> =
+        try {
+            NetworkInterface.getNetworkInterfaces().asSequence()
+                .filter { it.isUp && !it.isLoopback && it.supportsMulticast() }
+                .filter { networkInterface -> networkInterface.inetAddresses.asSequence().any { it is Inet4Address } }
+                .toList()
+        } catch (e: SocketException) {
+            logger?.error("Could not list network interfaces", e)
+            emptyList()
+        }
+
     override fun teardownSocket(multicastSocket: MulticastSocket) {
         logger?.debug("Releasing resources")
 
         releaseMulticastLock()
 
         if (!multicastSocket.isClosed) {
-            multicastSocket.leaveGroup(InetSocketAddress(multicastAddress, 0), null)
             multicastSocket.close()
         }
     }

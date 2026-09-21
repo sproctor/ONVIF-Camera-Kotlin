@@ -30,7 +30,13 @@ internal fun parseOnvifProfiles(input: String): List<MediaProfile> {
     val result = parseSoap<GetProfilesResponse>(input)
 
     return result.profiles.map {
-        MediaProfile(token = it.token, name = it.name, encoding = it.encoder?.encoding)
+        MediaProfile(
+            token = it.token,
+            name = it.name,
+            encoding = it.encoder?.encoding,
+            width = it.encoder?.resolution?.width,
+            height = it.encoder?.resolution?.height,
+        )
     }
 }
 
