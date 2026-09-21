@@ -15,4 +15,5 @@ internal class VideoEncoderConfiguration(
     @XmlElement(true)
     @XmlSerialName("Encoding", "http://www.onvif.org/ver10/schema", "tt")
     val encoding: String?,
+    val resolution: Resolution? = null,
 )
