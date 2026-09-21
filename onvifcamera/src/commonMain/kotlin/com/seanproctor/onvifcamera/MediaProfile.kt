@@ -1,13 +1,18 @@
 package com.seanproctor.onvifcamera
 
+import kotlin.jvm.JvmOverloads
+
 /**
  * Created by Remy Virin on 05/03/2018.
  * @MediaProfile: is used to store an Onvif media profile (token and name)
  *
  * [width] and [height] are the video encoder's configured resolution in pixels, or
  * null when the profile has no video encoder or the device does not report one.
+ *
+ * The constructor is `@JvmOverloads` so the three-argument JVM signature published before
+ * [width]/[height] existed stays callable by already-compiled consumers.
  */
-public data class MediaProfile(
+public data class MediaProfile @JvmOverloads public constructor(
     val token: String,
     val name: String?,
     val encoding: String?,
