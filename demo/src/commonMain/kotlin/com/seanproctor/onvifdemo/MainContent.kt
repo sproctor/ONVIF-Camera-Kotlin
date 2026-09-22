@@ -58,10 +58,13 @@ fun MainContent(viewModel: MainViewModel) {
                     TopAppBar(
                         title = { Text("Snapshot") },
                         navigationIcon = {
-                            IconButton(onClick = { screen = Screen.Main }) {
+                            IconButton(onClick = {
+                                viewModel.clearSnapshot()
+                                screen = Screen.CameraDetails
+                            }) {
                                 Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = "Close"
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back to device"
                                 )
                             }
                         }
@@ -71,10 +74,10 @@ fun MainContent(viewModel: MainViewModel) {
                     TopAppBar(
                         title = { Text("Stream") },
                         navigationIcon = {
-                            IconButton(onClick = { screen = Screen.Main }) {
+                            IconButton(onClick = { screen = Screen.CameraDetails }) {
                                 Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = "Close"
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back to device"
                                 )
                             }
                         }
@@ -302,7 +305,8 @@ fun StreamContent(viewModel: MainViewModel) {
             }
                 .buildString()
             Column(Modifier.fillMaxSize()) {
-                Text("Stream URL: $streamUrl")
+                // Show the camera's URI, not streamUrl: that one carries the password.
+                Text("Stream URL: $streamUri")
                 StreamPlayer(url = streamUrl, modifier = Modifier.fillMaxWidth().weight(1f))
             }
         } else {
