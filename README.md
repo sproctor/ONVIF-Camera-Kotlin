@@ -84,6 +84,11 @@ val snapshotUri = try {
 } catch (e: OnvifFault) {
     null
 }
+
+// The snapshot itself is a plain HTTP resource behind the camera's HTTP Digest, not a SOAP
+// operation. Fetch it through the device so the same credentials answer the challenge; every
+// call is a fresh frame, so keep the URI and poll with it.
+val jpeg: ByteArray? = snapshotUri?.let { device.getSnapshot(it) }
 ```
 
 ## Errors
@@ -95,7 +100,7 @@ Every failure the library raises about a device is an `OnvifException`:
 | `OnvifUnauthorized` | The camera answered 401, or with a SOAP fault whose subcode is `NotAuthorized`: credentials missing or wrong |
 | `OnvifForbidden` | The camera answered 403: credentials right, operation not permitted |
 | `OnvifFault` | The camera rejected the operation with any other SOAP fault; `code`, `subcodes`, `reason` and `detail` say why |
-| `OnvifInvalidResponse` | Any other non-2xx status without a fault |
+| `OnvifInvalidResponse` | Any other non-2xx status without a fault; a 2xx body that is not the reply asked for (an HTML login page, say); or a `getSnapshot` 2xx whose body is not an image |
 | `OnvifServiceUnavailable` | The camera does not offer the service an operation needs; `namespace` says which. For the media operations it means neither Media2 nor Media1 is offered |
 
 Network failures surface as the platform's `IOException`.

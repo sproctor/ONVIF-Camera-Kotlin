@@ -90,6 +90,43 @@ public class OnvifDevice internal constructor(
         return fixHost(parseOnvifSnapshotUri(media, response))
     }
 
+    /**
+     * A snapshot for [profile]: [getSnapshotURI] followed by [getSnapshot] on the result. Ask for
+     * the URI once and pass it to [getSnapshot] to poll.
+     *
+     * @throws OnvifFault if the device offers no snapshot for the profile
+     */
+    public suspend fun getSnapshot(profile: MediaProfile): ByteArray = getSnapshot(getSnapshotURI(profile))
+
+    /**
+     * Fetches the image at [snapshotUri], a URI from [getSnapshotURI], through this device's
+     * client, so the camera's HTTP Digest challenge (or Basic, if that is what it asks for) is
+     * answered with the device's credentials. WS-Security does not apply here: the snapshot is
+     * a plain HTTP resource, not a SOAP operation. Every GET is a fresh frame.
+     *
+     * @return the image bytes, JPEG whatever the profile's codec
+     * @throws OnvifUnauthorized on 401, [OnvifForbidden] on 403
+     * @throws OnvifInvalidResponse on any other failure, or a 200 whose body is not an image
+     */
+    public suspend fun getSnapshot(snapshotUri: String): ByteArray {
+        val response = client.get(snapshotUri)
+        when (response.status.value) {
+            in 200..299 -> Unit
+            401 -> throw OnvifUnauthorized("Unauthorized")
+            403 -> throw OnvifForbidden("Forbidden")
+            else -> throw OnvifInvalidResponse("Invalid response from device: ${response.status}")
+        }
+        val bytes = response.bodyAsBytes()
+        // Some firmware labels the JPEG application/octet-stream, so the bytes get a say too.
+        val isImage = response.contentType()?.contentType == "image" || bytes.isJpeg()
+        if (!isImage) {
+            throw OnvifInvalidResponse(
+                "Snapshot response is not an image (${response.contentType() ?: "no content type"}, ${bytes.size} bytes)"
+            )
+        }
+        return bytes
+    }
+
     /** Releases the HTTP client. Further calls on this device fail. */
     override fun close() {
         client.close()
@@ -253,6 +290,10 @@ public class OnvifDevice internal constructor(
 }
 
 internal class Credentials(val username: String, val password: String)
+
+/** SOI marker followed by any APPn/DQT segment: the start of every JPEG. */
+private fun ByteArray.isJpeg(): Boolean =
+    size >= 3 && this[0] == 0xFF.toByte() && this[1] == 0xD8.toByte() && this[2] == 0xFF.toByte()
 
 /**
  * A `NotAuthorized` fault is a device saying the credentials are wrong in SOAP rather than in

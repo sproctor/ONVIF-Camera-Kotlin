@@ -80,6 +80,12 @@ class LiveConformanceTest {
                     println("LIVE snapshot: $snapshot")
                     assertTrue(snapshot.startsWith("http", ignoreCase = true), "snapshot URI is not HTTP: $snapshot")
                     assertEquals(Url(url).host, Url(snapshot).host, "snapshot URI host was not rewritten to the address used")
+                    val jpeg = device.getSnapshot(snapshot)
+                    println("LIVE snapshot image: ${jpeg.size} bytes")
+                    assertTrue(
+                        jpeg.size > 3 && jpeg[0] == 0xFF.toByte() && jpeg[1] == 0xD8.toByte(),
+                        "snapshot body is not a JPEG (${jpeg.size} bytes)",
+                    )
                 }
             }
         }

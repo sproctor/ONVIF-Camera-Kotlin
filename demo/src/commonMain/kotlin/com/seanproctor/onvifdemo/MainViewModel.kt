@@ -10,12 +10,6 @@ import com.seanproctor.onvifcamera.OnvifException
 import com.seanproctor.onvifcamera.OnvifLogger
 import com.seanproctor.onvifcamera.network.OnvifDiscoveryManager
 import io.github.aakira.napier.Napier
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.plugins.auth.*
-import io.ktor.client.plugins.auth.providers.*
-import io.ktor.client.plugins.logging.*
-import io.ktor.client.request.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -144,45 +138,19 @@ class MainViewModel(
     }
 
     fun getSnapshot() {
-        val username = username
-        val password = password
+        val device = device ?: return
         val url = snapshotUri ?: return
 
+        // Fetched through the device's own client, so the camera's Digest challenge is answered
+        // with the connection's credentials; no second HTTP client to configure (or misconfigure).
         viewModelScope.launch(Dispatchers.IO) {
-            HttpClient {
-                if (username.isNotBlank() && password.isNotBlank()) {
-                    install(Auth) {
-                        basic {
-                            credentials {
-                                BasicAuthCredentials(username = username, password = password)
-                            }
-                        }
-                        digest {
-                            credentials {
-                                DigestAuthCredentials(username = username, password = password)
-                            }
-                        }
-                    }
-                }
-                install(Logging) {
-                    logger = Logger.DEFAULT
-                    level = LogLevel.BODY
-                }
-            }.use { client ->
-                Napier.d("Getting snapshot: $url")
-                try {
-                    val response = client.get(url)
-                    if (response.status.value in 200..299) {
-                        Napier.d("Got image")
-                        _image.value = response.body()
-                    } else {
-                        Napier.d("Got an error: ${response.status}")
-                        _errorText.value = response.status.toString()
-                    }
-                } catch (e: Exception) {
-                    Napier.d("Got an error: ${e.message}", e)
-                    _errorText.value = e.message ?: "Unknown error"
-                }
+            Napier.d("Getting snapshot: $url")
+            try {
+                _image.value = device.getSnapshot(url)
+                Napier.d("Got image")
+            } catch (e: Exception) {
+                Napier.d("Got an error: ${e.message}", e)
+                _errorText.value = e.message ?: "Unknown error"
             }
         }
     }
