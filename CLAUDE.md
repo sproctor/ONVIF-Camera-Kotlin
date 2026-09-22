@@ -33,8 +33,9 @@ as part of `build` (`checkKotlinAbi`). Any change to a public signature fails th
 `updateLegacyAbi` is run and the updated `.api` files are committed; review that diff as the API
 change. The Android dump is the one that covers the `OnvifDiscoveryManager(Context, …)` factory.
 
-CI (`.github/workflows/build.yml`) runs `./gradlew build` and publishes to Maven Central only on
-GitHub release creation. There is no separate lint step beyond what `build` runs.
+CI (`.github/workflows/ci.yml`) runs `./gradlew build` on pushes and PRs to master;
+`release.yml` publishes to Maven Central when a GitHub release is created, so the release tag must
+point at the commit that carries the bumped `version`. There is no separate lint step beyond what `build` runs.
 
 ### Versions / dependencies
 
