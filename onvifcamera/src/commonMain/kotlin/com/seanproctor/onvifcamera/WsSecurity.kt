@@ -25,6 +25,7 @@ internal object WsSecurity {
      * [deviceTime] must be the device's idea of now, not this host's; see
      * [OnvifDevice.requestDevice] for how it is learnt.
      */
+    @Suppress("NewApi") // java.time is API 26; the README requires minSdk 26 or desugaring
     fun usernameToken(username: String, password: String, deviceTime: Instant): Security {
         val nonce = ByteArray(16).also(random::nextBytes)
         val created = DateTimeFormatter.ISO_INSTANT.format(deviceTime.truncatedTo(ChronoUnit.SECONDS))
