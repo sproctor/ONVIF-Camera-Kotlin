@@ -54,8 +54,10 @@ Leave the credentials out for a camera that does not require them.
 val profiles = device.getProfiles()
 
 // Any profile with a video encoder can be asked for a stream URI. `encoding` is the codec as
-// the camera spells it (H264, H265, JPEG, ...); it is null for an audio-only profile.
-val profile = profiles.first { it.encoding != null }
+// the camera spells it (H264, H265, JPEG, ...); it is null for an audio-only profile, so a
+// device may have no profile to stream from.
+val profile = profiles.firstOrNull { it.encoding != null }
+    ?: error("The device has no video profile")
 val streamUri = device.getStreamURI(profile)
 
 // Snapshots are JPEG whatever the profile's codec. Whether the camera offers one at all is
@@ -73,9 +75,9 @@ Every failure the library raises about a device is an `OnvifException`:
 
 | Exception | Meaning |
 |---|---|
-| `OnvifUnauthorized` | The camera answered 401: credentials missing or wrong |
+| `OnvifUnauthorized` | The camera answered 401, or with a SOAP fault whose subcode is `NotAuthorized`: credentials missing or wrong |
 | `OnvifForbidden` | The camera answered 403: credentials right, operation not permitted |
-| `OnvifFault` | The camera rejected the operation with a SOAP fault; `code`, `subcodes` and `reason` say why |
+| `OnvifFault` | The camera rejected the operation with any other SOAP fault; `code`, `subcodes`, `reason` and `detail` say why |
 | `OnvifInvalidResponse` | Any other non-2xx status without a fault |
 | `OnvifServiceUnavailable` | The camera does not offer the service an operation needs; `namespace` says which |
 
