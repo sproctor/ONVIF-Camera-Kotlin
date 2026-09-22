@@ -120,15 +120,24 @@ internal abstract class BaseSocketListener(
             }
             if (interfaces.isEmpty()) {
                 socket.send(datagram)
+                return@repeat
             }
+            // One interface refusing the probe is routine (a VPN tunnel, a bridge with no
+            // route). Every interface refusing it means nothing went out, and listening for
+            // replies that cannot come would look exactly like an empty network, so fail.
+            var sent = false
+            var lastError: IOException? = null
             for (networkInterface in interfaces) {
                 try {
                     socket.networkInterface = networkInterface
                     socket.send(datagram)
+                    sent = true
                 } catch (e: IOException) {
                     logger?.debug("Could not probe on ${networkInterface.name}: ${e.message}")
+                    lastError = e
                 }
             }
+            if (!sent) throw checkNotNull(lastError)
         }
     }
 
