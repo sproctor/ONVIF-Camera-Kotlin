@@ -9,10 +9,11 @@ group = "com.seanproctor"
 version = "3.0.0"
 
 kotlin {
-    androidLibrary {
+    android {
         minSdk = 23
         compileSdk = 37
         namespace = "com.seanproctor.onvifcamera"
+        // Without this the commonTest suite runs on the JVM target only.
         withHostTest { }
     }
     jvm()

@@ -1,7 +1,6 @@
 package com.seanproctor.onvifdemo
 
 import android.content.pm.PackageManager
-import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -21,13 +20,28 @@ import io.github.aakira.napier.Napier
  */
 class MainActivity : ComponentActivity() {
 
+    private val logger = object : OnvifLogger {
+        override fun error(message: String, e: Throwable?) {
+            Napier.e(message, e)
+        }
+
+        override fun debug(message: String) {
+            Napier.d(message)
+        }
+    }
+
+    private val onvifDiscoveryManager by lazy { OnvifDiscoveryManager(context = this, logger = logger) }
+
     // Android 17 blocks local-network UDP for apps targeting API 37 until the user grants
-    // ACCESS_LOCAL_NETWORK, and WS-Discovery is local-network UDP. A denial is not fatal here:
-    // the discovery flow fails with an IOException, which the view model shows as an error. If
-    // the user later revokes the permission, Android restarts the process and this runs again.
+    // ACCESS_LOCAL_NETWORK, and WS-Discovery is local-network UDP. The UI, and with it the Scan
+    // button, only appears once the question is settled, so a scan cannot start while the dialog
+    // is up and fail for want of a grant that arrives a moment later. A denial is not fatal: the
+    // discovery flow fails with an IOException, which the view model shows as an error. If the
+    // user later revokes the permission, Android restarts the process and this runs again.
     private val requestLocalNetwork =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (!granted) Napier.w("Local network permission denied; camera discovery will fail")
+            showContent()
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,28 +50,18 @@ class MainActivity : ComponentActivity() {
         WindowCompat.getInsetsController(window, window.decorView)
             .isAppearanceLightStatusBars = true
 
+        Napier.base(DebugAntilog())
+
         if (Build.VERSION.SDK_INT >= 37 &&
             ContextCompat.checkSelfPermission(this, ACCESS_LOCAL_NETWORK) != PackageManager.PERMISSION_GRANTED
         ) {
             requestLocalNetwork.launch(ACCESS_LOCAL_NETWORK)
+        } else {
+            showContent()
         }
+    }
 
-        Napier.base(DebugAntilog())
-        val logger = object : OnvifLogger {
-            override fun error(message: String, e: Throwable?) {
-                Napier.e(message, e)
-            }
-
-            override fun debug(message: String) {
-                Napier.d(message)
-            }
-        }
-
-        val onvifDiscoveryManager = OnvifDiscoveryManager(
-            context = this,
-            logger = logger,
-        )
-
+    private fun showContent() {
         setContent {
             val viewModel: MainViewModel = viewModel<MainViewModel> {
                 MainViewModel(onvifDiscoveryManager, logger)
