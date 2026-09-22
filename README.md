@@ -49,7 +49,16 @@ val device = OnvifDevice.requestDevice("http://IP_ADDRESS:PORT/onvif/device_serv
 val deviceInfo = device.getDeviceInformation()
 ```
 
-Leave the credentials out for a camera that does not require them.
+Leave the credentials out for a camera that does not require them. The device holds one HTTP
+client for all its requests; `close()` it (or wrap it in `use { }`) when done. To control
+timeouts, proxies or TLS, pass your own Ktor `HttpClient` as `httpClient`; the library works
+with a configuration of it and never closes it.
+
+Credentials travel the way the ONVIF Core Specification asks: a WS-Security UsernameToken
+(password digest, fresh nonce, timestamp in the camera's own time, learnt from
+`GetSystemDateAndTime` at connect) in every request's SOAP header, so one round trip per call.
+A camera that authenticates at the HTTP layer instead is answered with HTTP Digest, or Basic if
+that is what it asks for. The password itself is never sent.
 
 The services the camera advertises decide how profiles and URIs are fetched: Media2
 (`ver20/media`) when it offers that, Media1 (`ver10/media`) otherwise. A camera offering
