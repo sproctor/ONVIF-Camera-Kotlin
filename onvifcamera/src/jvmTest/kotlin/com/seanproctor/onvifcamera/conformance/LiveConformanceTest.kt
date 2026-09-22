@@ -2,6 +2,7 @@ package com.seanproctor.onvifcamera.conformance
 
 import com.seanproctor.onvifcamera.OnvifDevice
 import com.seanproctor.onvifcamera.OnvifFault
+import com.seanproctor.onvifcamera.OnvifLogger
 import com.seanproctor.onvifcamera.network.OnvifDiscoveryManager
 import io.ktor.http.Url
 import kotlinx.coroutines.flow.first
@@ -31,11 +32,29 @@ class LiveConformanceTest {
     private val username = System.getenv("ONVIF_CONFORMANCE_USERNAME")
     private val password = System.getenv("ONVIF_CONFORMANCE_PASSWORD")
 
+    /**
+     * Counts HTTP exchanges from the library's own log so the run can say which authentication
+     * the camera used: a WS-UsernameToken camera answers every request first time, an HTTP-layer
+     * camera challenges each one with a 401 first.
+     */
+    private class Accounting : OnvifLogger {
+        var requests = 0
+        var challenges = 0
+        var tokens = 0
+        override fun debug(message: String) {
+            if (message.startsWith("REQUEST:")) requests++
+            if (message.startsWith("RESPONSE: 401")) challenges++
+            if ("UsernameToken" in message) tokens++
+        }
+        override fun error(message: String, e: Throwable?) = Unit
+    }
+
     @Test
     fun `LIVE - connect, read information, profiles, stream and snapshot URIs`() {
         assumeTrue("Set ONVIF_CONFORMANCE_URL (and USERNAME/PASSWORD) to run against a real camera", url != null)
+        val accounting = Accounting()
         runBlocking {
-            val device = OnvifDevice.requestDevice(url!!, username, password)
+            val device = OnvifDevice.requestDevice(url!!, username, password, accounting)
             val info = device.getDeviceInformation()
             println("LIVE device: ${info.manufacturer} ${info.model} firmware ${info.firmwareVersion}")
             assertTrue(info.manufacturer.isNotBlank(), "manufacturer")
@@ -62,7 +81,17 @@ class LiveConformanceTest {
                 assertTrue(snapshot.startsWith("http", ignoreCase = true), "snapshot URI is not HTTP: $snapshot")
                 assertEquals(Url(url).host, Url(snapshot).host, "snapshot URI host was not rewritten to the address used")
             }
+            device.close()
         }
+        // Six operations: GetSystemDateAndTime, GetServices, then four. A camera that accepts the
+        // WS-UsernameToken needs exactly six requests and no 401; one that authenticates at the
+        // HTTP layer needs a 401 challenge before each authenticated operation.
+        val mechanism = when {
+            username == null -> "no credentials"
+            accounting.challenges == 0 -> "WS-Security UsernameToken accepted, no HTTP challenge"
+            else -> "HTTP challenge on ${accounting.challenges} of ${accounting.requests} requests (UsernameToken ignored or rejected)"
+        }
+        println("LIVE authentication: ${accounting.requests} HTTP requests, ${accounting.challenges} x 401, ${accounting.tokens} carried a UsernameToken: $mechanism")
     }
 
     @Test
