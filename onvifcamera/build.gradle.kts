@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.android.kotlin.multiplatform.library)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.vanniktech.maven.publish.base)
+    alias(libs.plugins.binary.compatibility.validator)
 }
 
 group = "com.seanproctor"

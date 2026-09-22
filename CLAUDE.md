@@ -24,7 +24,12 @@ The repo has two Gradle modules:
 ./gradlew :onvifcamera:jvmTest --tests "com.seanproctor.onvifcamera.parsers.ParserTest"   # single test class
 ./gradlew :demo:run                      # run the desktop demo app
 ./gradlew :demo:installDebug             # install the Android demo on a connected device
+./gradlew :onvifcamera:apiDump           # regenerate onvifcamera/api/*.api after a public API change
 ```
+
+The binary-compatibility-validator plugin checks the library's public API against the dumps in
+`onvifcamera/api/` as part of `build`. Any change to a public signature fails the build until
+`apiDump` is run and the updated `.api` files are committed; review that diff as the API change.
 
 CI (`.github/workflows/build.yml`) runs `./gradlew build` and publishes to Maven Central only on
 GitHub release creation. There is no separate lint step beyond what `build` runs.
@@ -37,6 +42,13 @@ every public declaration must have an explicit `public`/`internal` visibility mo
 fails. The library version is set in `onvifcamera/build.gradle.kts` (`version = ...`).
 
 ## Architecture
+
+### Public model types
+
+`MediaProfile`, `DiscoveredOnvifDevice` and `OnvifDeviceInformation` are plain classes with
+hand-written `equals`/`hashCode`/`toString`, not data classes, so a property can be added with a
+default value without removing the previous constructor and `copy` signatures from the binary.
+Keep it that way when adding fields: add the property with a default, extend the three overrides.
 
 ### Request flow (the core abstraction)
 
