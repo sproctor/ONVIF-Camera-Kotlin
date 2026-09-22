@@ -8,9 +8,8 @@ import com.seanproctor.onvifcamera.parseOnvifStreamUri
 import com.seanproctor.onvifcamera.readResourceFile
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 class ParserTest {
     @Test
@@ -38,7 +37,7 @@ class ParserTest {
     @Test
     fun testProfilesResolutionDistinguishesSubStream() {
         val result = parseOnvifProfiles(readResourceFile("profiles2.xml"))
-        val video = result.filter { it.canStream() }
+        val video = result.filter { it.encoding != null }
         assertEquals(listOf(2592 to 1944, 704 to 480), video.map { it.width to it.height })
     }
 
@@ -50,10 +49,9 @@ class ParserTest {
         assertEquals("MediaProfile00000", result[0].token)
         assertEquals("MediaProfile_Channel1_MainStream", result[0].name)
         assertEquals("H264", result[0].encoding)
-        assertTrue(result[0].canStream())
         assertEquals("MediaProfile00001", result[1].token)
         assertEquals("MediaProfile_Channel1_SubStream1", result[1].name)
-        assertTrue(result[1].canStream())
+        assertNotNull(result[1].encoding)
     }
 
     @Test
@@ -66,11 +64,9 @@ class ParserTest {
 
         val profile000 = result.first { it.token == "Profile000" }
         assertNull(profile000.encoding)
-        assertFalse(profile000.canStream())
 
         val profile001 = result.first { it.token == "Profile001" }
         assertEquals("H264", profile001.encoding)
-        assertTrue(profile001.canStream())
     }
 
     @Test

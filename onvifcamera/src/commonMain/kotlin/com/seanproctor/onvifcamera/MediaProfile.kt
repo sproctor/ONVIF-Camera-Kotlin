@@ -3,8 +3,15 @@ package com.seanproctor.onvifcamera
 /**
  * An ONVIF media profile: the unit a stream or snapshot URI is requested for.
  *
- * [width] and [height] are the video encoder's configured resolution in pixels, or
- * null when the profile has no video encoder or the device does not report one.
+ * [encoding] is the video encoder's codec as the device spells it, such as `H264`, or null when
+ * the profile has no video encoder (an audio-only profile) or the device does not report one.
+ * [width] and [height] are the video encoder's configured resolution in pixels, or null on the
+ * same conditions.
+ *
+ * Whether a profile can stream or supply a snapshot is not a property of the profile, so this
+ * class does not claim to know. Any profile with a video encoder can be asked for a stream URI.
+ * Snapshots are JPEG whatever the profile's codec, and a device that offers none answers
+ * `getSnapshotURI` with a fault. Ask the device.
  *
  * This is deliberately not a data class. New camera quirks add properties here, and every
  * property added to a data class removes the old `copy` and constructor signatures from the
@@ -19,13 +26,6 @@ public class MediaProfile(
     public val width: Int? = null,
     public val height: Int? = null,
 ) {
-    /** Whether [encoding] is a video codec this library knows a stream URI can be fetched for. */
-    public fun canStream(): Boolean =
-        encoding == "MPEG4" || encoding == "H264" || encoding == "H265"
-
-    public fun canSnapshot(): Boolean =
-        encoding == "JPEG"
-
     override fun equals(other: Any?): Boolean =
         other is MediaProfile &&
             token == other.token &&

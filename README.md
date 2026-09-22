@@ -42,21 +42,24 @@ val deviceInfo = device.getDeviceInformation()
 
 Leave the credentials out for a camera that does not require them.
 
-## Retrieve the stream URI
+## Retrieve the stream and snapshot URIs
 
 ```kotlin
-// Get media profiles to find which ones are streams/snapshots
 val profiles = device.getProfiles()
 
-val streamUri = profiles.firstOrNull { it.canStream() }?.let {
-    device.getStreamURI(it)
-}
-val snapshotUri = profiles.firstOrNull { it.canSnapshot() }?.let {
-    device.getSnapshotURI(it)
+// Any profile with a video encoder can be asked for a stream URI. `encoding` is the codec as
+// the camera spells it (H264, H265, JPEG, ...); it is null for an audio-only profile.
+val profile = profiles.first { it.encoding != null }
+val streamUri = device.getStreamURI(profile)
+
+// Snapshots are JPEG whatever the profile's codec. Whether the camera offers one at all is
+// the camera's answer: a device without snapshot support replies with a fault.
+val snapshotUri = try {
+    device.getSnapshotURI(profile)
+} catch (e: OnvifException) {
+    null
 }
 ```
-
-`canStream()` is true for H.264, H.265 and MPEG-4 profiles; `canSnapshot()` for JPEG.
 
 ## Errors
 
