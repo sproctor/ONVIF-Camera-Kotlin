@@ -3,6 +3,8 @@ package com.seanproctor.onvifcamera.encoders
 import com.seanproctor.onvifcamera.MediaProfile
 import com.seanproctor.onvifcamera.MediaService
 import com.seanproctor.onvifcamera.OnvifCommands
+import com.seanproctor.onvifcamera.WsSecurity
+import java.time.Instant
 import nl.adaptivity.xmlutil.EventType
 import nl.adaptivity.xmlutil.xmlStreaming
 import kotlin.test.Test
@@ -18,6 +20,8 @@ private const val MEDIA20_NS = "http://www.onvif.org/ver20/media/wsdl"
 private const val WSA_NS = "http://schemas.xmlsoap.org/ws/2004/08/addressing"
 private const val WSD_NS = "http://schemas.xmlsoap.org/ws/2005/04/discovery"
 private const val NETWORK_NS = "http://www.onvif.org/ver10/network/wsdl"
+private const val WSSE_NS = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"
+private const val WSU_NS = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"
 
 /**
  * The commands are produced by kotlinx serialization, so the SOAP prefix and whitespace are an
@@ -137,14 +141,31 @@ class OnvifCommandsTest {
 
     @Test
     fun testDeviceInformationCommand() {
-        val command = OnvifCommands.deviceInformationCommand
+        val command = OnvifCommands.deviceInformationCommand()
         assertWellFormed(command)
         assertEquals(DEVICE_NS, namespaceOf(command, "GetDeviceInformation"))
+        assertFalse(hasElement(command, "Header"), "no credentials, so no SOAP header: $command")
+    }
+
+    @Test
+    fun testCredentialsGoInAWsSecurityUsernameTokenWithAPasswordDigest() {
+        val security = WsSecurity.usernameToken("admin", "secret", Instant.parse("2026-09-22T12:00:00Z"))
+        val command = OnvifCommands.deviceInformationCommand(security)
+        assertWellFormed(command)
+        assertEquals(WSSE_NS, namespaceOf(command, "Security"))
+        assertEquals(WSSE_NS, namespaceOf(command, "UsernameToken"))
+        assertEquals("admin", readElementText(command, "Username"))
+        assertEquals(WSU_NS, namespaceOf(command, "Created"))
+        assertEquals("2026-09-22T12:00:00Z", readElementText(command, "Created"))
+        assertContains(command, "#PasswordDigest\"", message = "the Password must be typed as a digest")
+        assertFalse(command.contains("secret"), "the password itself must never appear: $command")
+        // The header precedes the body, as SOAP requires.
+        assertTrue(command.indexOf("Security") < command.indexOf("GetDeviceInformation"), command)
     }
 
     @Test
     fun testServicesCommandExcludesCapabilities() {
-        val command = OnvifCommands.servicesCommand
+        val command = OnvifCommands.servicesCommand()
         assertWellFormed(command)
         assertEquals(DEVICE_NS, namespaceOf(command, "GetServices"))
         assertEquals("false", readElementText(command, "IncludeCapability"))
