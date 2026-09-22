@@ -70,8 +70,12 @@ XML strings and parses responses with kotlinx-serialization XML.
    looks the path up in `namespaceMap` (throws `OnvifServiceUnavailable`, carrying the namespace,
    if the camera doesn't offer that service).
 3. **`OnvifCommands`** holds the hand-written SOAP request bodies (constants and builder functions).
-4. **`OnvifDevice.execute()`** (companion) is the single HTTP chokepoint. It spins up a fresh Ktor
-   `HttpClient` per call, installs Basic + Digest auth when credentials are present, posts the SOAP
+4. **`OnvifDevice.execute()`** (companion) is the single HTTP chokepoint. Each `OnvifDevice` owns one
+   Ktor `HttpClient` (`AutoCloseable`; `requestDevice` accepts a caller-supplied one). Every
+   authenticated request carries a WS-Security UsernameToken built by `WsSecurity`, timestamped in
+   device time (`GetSystemDateAndTime` at connect gives the clock offset); HTTP Digest, and Basic
+   only on a Basic challenge (`ChallengedBasicAuthProvider`), remain as the reactive fallback for
+   devices that authenticate at the HTTP layer. `execute` posts the SOAP
    body, checks every response body for a SOAP fault (`parseOnvifFault`; cameras send faults with
    200 as well as 400/500) and throws it as `OnvifFault`, then maps remaining non-2xx statuses to
    `OnvifUnauthorized`, `OnvifForbidden` or `OnvifInvalidResponse`. All are subclasses of
