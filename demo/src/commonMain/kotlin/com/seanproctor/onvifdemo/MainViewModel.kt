@@ -99,8 +99,6 @@ class MainViewModel(
                         if (address.contains("://")) address
                         else "http://$address/onvif/device_service"
                     val device = OnvifDevice.requestDevice(url, username, password, logger)
-                    // The handle owns an HTTP client; release the previous camera's.
-                    this@MainViewModel.device?.close()
                     this@MainViewModel.device = device
 
                     // Display camera specs
@@ -136,11 +134,6 @@ class MainViewModel(
 
     fun clearErrorText() {
         _errorText.value = null
-    }
-
-    override fun onCleared() {
-        device?.close()
-        super.onCleared()
     }
 
     fun getSnapshot() {

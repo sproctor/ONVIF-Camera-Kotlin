@@ -22,9 +22,8 @@ public final class com/seanproctor/onvifcamera/MediaProfile {
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class com/seanproctor/onvifcamera/OnvifDevice : java/lang/AutoCloseable {
+public final class com/seanproctor/onvifcamera/OnvifDevice {
 	public static final field Companion Lcom/seanproctor/onvifcamera/OnvifDevice$Companion;
-	public fun close ()V
 	public final fun getDeviceInformation (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getProfiles (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getSnapshotURI (Lcom/seanproctor/onvifcamera/MediaProfile;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -36,8 +35,8 @@ public final class com/seanproctor/onvifcamera/OnvifDevice$Companion {
 	public static synthetic fun getHostname$default (Lcom/seanproctor/onvifcamera/OnvifDevice$Companion;Ljava/lang/String;Lcom/seanproctor/onvifcamera/OnvifLogger;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun isReachableEndpoint (Ljava/lang/String;Lcom/seanproctor/onvifcamera/OnvifLogger;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun isReachableEndpoint$default (Lcom/seanproctor/onvifcamera/OnvifDevice$Companion;Ljava/lang/String;Lcom/seanproctor/onvifcamera/OnvifLogger;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public final fun requestDevice (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/seanproctor/onvifcamera/OnvifLogger;Lio/ktor/client/HttpClient;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun requestDevice$default (Lcom/seanproctor/onvifcamera/OnvifDevice$Companion;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/seanproctor/onvifcamera/OnvifLogger;Lio/ktor/client/HttpClient;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun requestDevice (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/seanproctor/onvifcamera/OnvifLogger;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun requestDevice$default (Lcom/seanproctor/onvifcamera/OnvifDevice$Companion;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/seanproctor/onvifcamera/OnvifLogger;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 }
 
 public final class com/seanproctor/onvifcamera/OnvifDeviceInformation {

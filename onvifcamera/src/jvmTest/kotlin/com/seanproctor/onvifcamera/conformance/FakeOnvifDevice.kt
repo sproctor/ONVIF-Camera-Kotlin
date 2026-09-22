@@ -8,13 +8,9 @@ import nl.adaptivity.xmlutil.xmlStreaming
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.security.MessageDigest
-import java.time.Duration
-import java.time.Instant
-import java.time.ZoneOffset
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicInteger
 
 internal const val SOAP12_NS = "http://www.w3.org/2003/05/soap-envelope"
 internal const val DEVICE_NS = "http://www.onvif.org/ver10/device/wsdl"
@@ -36,16 +32,6 @@ private val MEDIA2_TRANSPORTS = setOf(
 internal const val MAIN_PROFILE = "Profile000"
 internal const val SUB_PROFILE = "Profile001"
 
-// WS-Security, spelled out here rather than imported so the check stays independent of the code
-// it checks.
-private const val WSSE_NS = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"
-private const val WSU_NS = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"
-private const val PASSWORD_DIGEST_TYPE =
-    "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest"
-
-/** Operations the ONVIF access policy opens to unauthenticated callers. */
-private val PRE_AUTH_OPERATIONS = setOf("GetSystemDateAndTime", "GetServices", "GetServiceCapabilities", "GetHostname")
-
 /**
  * A minimal ONVIF device on loopback, built from the JDK's HTTP server so the suite needs no
  * dependency. It answers the operations this library uses with spec-shaped responses and, more
@@ -63,12 +49,6 @@ internal class FakeOnvifDevice(
     private val credentials: Pair<String, String>? = "admin" to "secret",
     /** The scheme in the 401 challenge: `Digest`, as ONVIF requires, or `Basic` for the rare device that uses it. */
     private val challengeScheme: String = "Digest",
-    /** Authenticate in SOAP only: never challenge at the HTTP layer, answer NotAuthorized faults instead. */
-    private val wsSecurityOnly: Boolean = false,
-    /** Ignore any UsernameToken and authenticate at the HTTP layer only, as Axis firmware does. */
-    private val ignoreUsernameToken: Boolean = false,
-    /** The device clock minus this host's. Token timestamps must follow the device clock. */
-    private val clockSkew: Duration = Duration.ZERO,
     /** HTTP status a SOAP fault is sent with; the spec wants 400/500, some cameras send 200. */
     private val faultStatus: Int = 400,
     /** Answer every media operation with a NotAuthorized fault (HTTP 200), as some cameras do. */
@@ -90,12 +70,6 @@ internal class FakeOnvifDevice(
 
     /** `"<service> <operation>"` for every request that got past authentication, in order. */
     val operations = CopyOnWriteArrayList<String>()
-
-    /** How many 401 challenges were issued: every one is a round trip the client paid. */
-    val challenges = AtomicInteger()
-
-    /** How many requests carried a WS-Security UsernameToken, valid or not. */
-    val usernameTokens = AtomicInteger()
 
     private val realm = "onvif-conformance"
     private val nonce = UUID.randomUUID().toString().replace("-", "")
@@ -131,6 +105,10 @@ internal class FakeOnvifDevice(
         if (!contentType.startsWith("application/soap+xml")) {
             violate("$path: Content-Type is '$contentType'; SOAP 1.2 over HTTP requires application/soap+xml")
         }
+        if (credentials != null && !authorized(exchange, path)) {
+            challenge(exchange)
+            return
+        }
         val request = try {
             parseSoapRequest(body)
         } catch (e: Exception) {
@@ -147,18 +125,6 @@ internal class FakeOnvifDevice(
             violate("$path: SOAP Body has no operation")
             respondFault(exchange, "Sender", listOf("ActionNotSupported"), "Empty body")
             return
-        }
-        if (request.first("UsernameToken") != null) usernameTokens.incrementAndGet()
-        // Pre-auth operations (ONVIF access policy) are open to everyone; the rest need either a
-        // valid UsernameToken in the SOAP header or, unless this device is SOAP-only, HTTP auth.
-        if (credentials != null && op.localName !in PRE_AUTH_OPERATIONS) {
-            val tokenAccepted = !ignoreUsernameToken && verifyUsernameToken(request, path)
-            val accepted = tokenAccepted || (!wsSecurityOnly && authorized(exchange, path))
-            if (!accepted) {
-                if (wsSecurityOnly) respondFault(exchange, "Sender", listOf("NotAuthorized"), "Sender not Authorized")
-                else challenge(exchange)
-                return
-            }
         }
         val service = path.substringAfterLast('/')
         operations += "$service ${op.localName}"
@@ -195,14 +161,10 @@ internal class FakeOnvifDevice(
                 x,
                 """<tds:GetHostnameResponse><tds:HostnameInformation><tt:FromDHCP>false</tt:FromDHCP><tt:Name>fakecam</tt:Name></tds:HostnameInformation></tds:GetHostnameResponse>""",
             )
-            "GetSystemDateAndTime" -> {
-                if (r.first("UsernameToken") != null) violate("GetSystemDateAndTime is a pre-auth operation; sending credentials to it is pointless")
-                val t = Instant.now().plus(clockSkew).atOffset(ZoneOffset.UTC)
-                respondSoap(
-                    x,
-                    """<tds:GetSystemDateAndTimeResponse><tds:SystemDateAndTime><tt:DateTimeType>NTP</tt:DateTimeType><tt:DaylightSavings>false</tt:DaylightSavings><tt:UTCDateTime><tt:Time><tt:Hour>${t.hour}</tt:Hour><tt:Minute>${t.minute}</tt:Minute><tt:Second>${t.second}</tt:Second></tt:Time><tt:Date><tt:Year>${t.year}</tt:Year><tt:Month>${t.monthValue}</tt:Month><tt:Day>${t.dayOfMonth}</tt:Day></tt:Date></tt:UTCDateTime></tds:SystemDateAndTime></tds:GetSystemDateAndTimeResponse>""",
-                )
-            }
+            "GetSystemDateAndTime" -> respondSoap(
+                x,
+                """<tds:GetSystemDateAndTimeResponse><tds:SystemDateAndTime><tt:DateTimeType>NTP</tt:DateTimeType><tt:DaylightSavings>false</tt:DaylightSavings></tds:SystemDateAndTime></tds:GetSystemDateAndTimeResponse>""",
+            )
             else -> {
                 violate("device service: unexpected operation ${op.localName}")
                 respondFault(x, "Sender", listOf("ActionNotSupported"), "Action not supported")
@@ -358,58 +320,7 @@ internal class FakeOnvifDevice(
 
     private fun snapshotUri() = "http://$advertisedHost/onvifsnapshot/media_service/snapshot?channel=1&subtype=0"
 
-    // ---- WS-Security UsernameToken --------------------------------------------------------------
-
-    /**
-     * True if the request carries a UsernameToken whose PasswordDigest verifies against this
-     * device's credentials. Structural mistakes are violations; a wrong username or password is
-     * merely not accepted.
-     */
-    private fun verifyUsernameToken(r: SoapRequest, path: String): Boolean {
-        val (user, pass) = credentials ?: return false
-        val token = r.first("UsernameToken") ?: return false
-        if (token.namespace != WSSE_NS) violate("$path: UsernameToken in namespace ${token.namespace}, expected $WSSE_NS")
-        val children = r.children(token)
-        val username = children.firstOrNull { it.localName == "Username" }?.text?.toString()?.trim()
-        val password = children.firstOrNull { it.localName == "Password" }
-        val nonce = children.firstOrNull { it.localName == "Nonce" }?.text?.toString()?.trim()
-        val created = children.firstOrNull { it.localName == "Created" }
-        if (username == null || password == null || nonce == null || created == null) {
-            violate("$path: UsernameToken lacks Username, Password, Nonce or Created")
-            return false
-        }
-        if (password.attributes["Type"] != PASSWORD_DIGEST_TYPE) {
-            violate("$path: Password Type is '${password.attributes["Type"]}', expected PasswordDigest")
-        }
-        if (created.namespace != WSU_NS) violate("$path: Created in namespace ${created.namespace}, expected $WSU_NS")
-        val createdText = created.text.toString().trim()
-        val createdAt = try {
-            Instant.parse(createdText)
-        } catch (_: Exception) {
-            violate("$path: Created '$createdText' is not an xs:dateTime in UTC")
-            return false
-        }
-        val drift = Duration.between(createdAt, Instant.now().plus(clockSkew)).abs()
-        if (drift > Duration.ofMinutes(5)) {
-            violate("$path: Created is ${drift.seconds}s from the device clock; devices reject tokens more than a few minutes off")
-        }
-        val nonceBytes = try {
-            java.util.Base64.getDecoder().decode(nonce)
-        } catch (_: IllegalArgumentException) {
-            violate("$path: Nonce is not Base64")
-            return false
-        }
-        if (username != user) return false
-        val expected = MessageDigest.getInstance("SHA-1").run {
-            update(nonceBytes)
-            update(createdText.encodeToByteArray())
-            update(pass.encodeToByteArray())
-            digest()
-        }
-        return java.util.Base64.getEncoder().encodeToString(expected) == password.text.toString().trim()
-    }
-
-    // ---- HTTP authentication --------------------------------------------------------------------
+    // ---- Digest authentication ----------------------------------------------------------------
 
     private fun authorized(x: HttpExchange, path: String): Boolean {
         val (user, pass) = credentials ?: return true
@@ -452,7 +363,6 @@ internal class FakeOnvifDevice(
     }
 
     private fun challenge(x: HttpExchange) {
-        challenges.incrementAndGet()
         val value = if (challengeScheme == "Basic") "Basic realm=\"$realm\""
         else "Digest realm=\"$realm\", nonce=\"$nonce\", qop=\"auth\", algorithm=MD5"
         x.responseHeaders.add("WWW-Authenticate", value)
@@ -508,10 +418,6 @@ internal class SoapRequest(val elements: List<Element>) {
         }
 
     fun first(localName: String): Element? = elements.firstOrNull { it.localName == localName }
-
-    /** The elements nested anywhere inside [parent]. */
-    fun children(parent: Element): List<Element> =
-        elements.drop(elements.indexOf(parent) + 1).takeWhile { it.depth > parent.depth }
     fun all(localName: String): List<Element> = elements.filter { it.localName == localName }
     fun text(localName: String): String? = first(localName)?.text?.toString()?.trim()
     fun indexOf(localName: String): Int = elements.indexOfFirst { it.localName == localName }

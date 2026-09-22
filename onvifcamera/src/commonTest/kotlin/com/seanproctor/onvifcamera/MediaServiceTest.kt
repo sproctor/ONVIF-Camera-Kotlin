@@ -1,6 +1,5 @@
 package com.seanproctor.onvifcamera
 
-import io.ktor.client.HttpClient
 import io.ktor.http.Url
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -36,21 +35,19 @@ class MediaServiceTest {
     fun aDeviceWithNoMediaServiceFailsEveryMediaCallBeforeTouchingTheNetwork() = runTest {
         // Only the device service is advertised. Nothing is sent: the failure is decided from the
         // services list, so an unreachable address is fine here.
-        OnvifDevice(
+        val camera = OnvifDevice(
             address = Url("http://192.0.2.1"),
-            credentials = null,
+            username = null,
+            password = null,
             namespaceMap = mapOf(device to "/onvif/device_service"),
-            clockOffset = null,
-            client = HttpClient(),
             logger = null,
-        ).use { camera ->
-            val profile = MediaProfile(token = "Profile_1", name = null, encoding = "H264")
+        )
+        val profile = MediaProfile(token = "Profile_1", name = null, encoding = "H264")
 
-            val e = assertFailsWith<OnvifServiceUnavailable> { camera.getProfiles() }
-            assertEquals(MediaService.MEDIA2.namespace, e.namespace)
-            assertContains(e.message.orEmpty(), MediaService.MEDIA1.namespace)
-            assertFailsWith<OnvifServiceUnavailable> { camera.getStreamURI(profile) }
-            assertFailsWith<OnvifServiceUnavailable> { camera.getSnapshotURI(profile) }
-        }
+        val e = assertFailsWith<OnvifServiceUnavailable> { camera.getProfiles() }
+        assertEquals(MediaService.MEDIA2.namespace, e.namespace)
+        assertContains(e.message.orEmpty(), MediaService.MEDIA1.namespace)
+        assertFailsWith<OnvifServiceUnavailable> { camera.getStreamURI(profile) }
+        assertFailsWith<OnvifServiceUnavailable> { camera.getSnapshotURI(profile) }
     }
 }

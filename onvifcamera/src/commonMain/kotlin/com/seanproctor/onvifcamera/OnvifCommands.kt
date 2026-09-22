@@ -11,56 +11,47 @@ internal object OnvifCommands {
      * namespace declarations; the output is equivalent to a hand-built body up to whitespace and
      * the namespace prefixes chosen by the serializer.
      */
-    private inline fun <reified T : Any> encodeSoap(data: T, security: Security? = null): String {
+    private inline fun <reified T : Any> encodeSoap(data: T): String {
         val module = SerializersModule {
             polymorphic(Any::class) {
                 subclass(T::class, serializer())
             }
         }
-        return SoapXml(module).encodeToString(serializer<Envelope<T>>(), Envelope(data, security))
+        return SoapXml(module).encodeToString(serializer<Envelope<T>>(), Envelope(data))
     }
-
-    // Every authenticated operation takes the WS-Security header for this request; a token is
-    // single-use (fresh nonce and timestamp), so nothing here is cached.
 
     // Media2 returns tokens and names only unless asked for configurations. Only the video
     // encoder is asked for: this library finds cameras and their streams, not audio devices, and
     // every field MediaProfile exposes comes from that one configuration. Media1 has no such
     // choice and inlines everything.
-    internal fun profilesCommand(media: MediaService, security: Security? = null): String = when (media) {
-        MediaService.MEDIA2 -> encodeSoap(GetProfilesRequest(type = listOf("VideoEncoder")), security)
-        MediaService.MEDIA1 -> encodeSoap(GetProfilesRequest1(), security)
+    private val profilesMedia2: String = encodeSoap(GetProfilesRequest(type = listOf("VideoEncoder")))
+    private val profilesMedia1: String = encodeSoap(GetProfilesRequest1())
+
+    internal fun profilesCommand(media: MediaService): String = when (media) {
+        MediaService.MEDIA2 -> profilesMedia2
+        MediaService.MEDIA1 -> profilesMedia1
     }
 
-    internal fun getStreamURICommand(
-        media: MediaService,
-        profile: MediaProfile,
-        protocol: String = "RTSP",
-        security: Security? = null,
-    ): String = when (media) {
-        MediaService.MEDIA2 -> encodeSoap(GetStreamUriRequest(profileToken = profile.token, protocol = protocol), security)
-        MediaService.MEDIA1 -> encodeSoap(
-            GetStreamUriRequest1(
-                streamSetup = StreamSetup(transport = Transport(protocol = protocol)),
-                profileToken = profile.token,
-            ),
-            security,
-        )
-    }
-
-    internal fun getSnapshotURICommand(media: MediaService, profile: MediaProfile, security: Security? = null): String =
+    internal fun getStreamURICommand(media: MediaService, profile: MediaProfile, protocol: String = "RTSP"): String =
         when (media) {
-            MediaService.MEDIA2 -> encodeSoap(GetSnapshotUriRequest(profileToken = profile.token), security)
-            MediaService.MEDIA1 -> encodeSoap(GetSnapshotUriRequest1(profileToken = profile.token), security)
+            MediaService.MEDIA2 -> encodeSoap(GetStreamUriRequest(profileToken = profile.token, protocol = protocol))
+            MediaService.MEDIA1 -> encodeSoap(
+                GetStreamUriRequest1(
+                    streamSetup = StreamSetup(transport = Transport(protocol = protocol)),
+                    profileToken = profile.token,
+                )
+            )
         }
 
-    internal fun deviceInformationCommand(security: Security? = null): String =
-        encodeSoap(GetDeviceInformationRequest(), security)
+    internal fun getSnapshotURICommand(media: MediaService, profile: MediaProfile): String = when (media) {
+        MediaService.MEDIA2 -> encodeSoap(GetSnapshotUriRequest(profileToken = profile.token))
+        MediaService.MEDIA1 -> encodeSoap(GetSnapshotUriRequest1(profileToken = profile.token))
+    }
 
-    internal fun servicesCommand(security: Security? = null): String =
-        encodeSoap(GetServicesRequest(includeCapability = false), security)
+    internal val deviceInformationCommand: String = encodeSoap(GetDeviceInformationRequest())
 
-    // Pre-auth operations in the ONVIF access policy: never sent with credentials.
+    internal val servicesCommand: String = encodeSoap(GetServicesRequest(includeCapability = false))
+
     internal val getSystemDateAndTimeCommand: String = encodeSoap(GetSystemDateAndTimeRequest())
 
     internal val getHostnameCommand: String = encodeSoap(GetHostnameRequest())
