@@ -27,6 +27,11 @@ public interface OnvifDiscoveryManager {
      *
      * Replies that cannot be parsed are logged and dropped. Failing to open or read the socket
      * fails the flow with the underlying exception.
+     *
+     * On Android, an app that targets Android 17 (API 37) or higher must hold
+     * `android.permission.ACCESS_LOCAL_NETWORK`, declared in its manifest and granted at runtime,
+     * before collecting: Android 17 blocks local-network UDP for such apps, and the flow fails
+     * with an `IOException` if the permission is missing.
      */
     public fun discoverDevices(): Flow<List<DiscoveredOnvifDevice>>
 }

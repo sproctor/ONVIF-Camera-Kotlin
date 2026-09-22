@@ -11,8 +11,8 @@ implementation("com.seanproctor:onvifcamera:<VERSION>")
 ## Discover cameras on the local network
 
 ```kotlin
-val discovery = OnvifDiscoveryManager()          // JVM
-val discovery = OnvifDiscoveryManager(context)   // Android: needs a Context for the multicast lock
+val discovery = OnvifDiscoveryManager()
+// On Android: OnvifDiscoveryManager(context), which needs the Context for the multicast lock.
 
 // The flow is cold. Collecting it opens a socket, sends the WS-Discovery probe on the
 // SOAP-over-UDP retransmission schedule and keeps listening until the collector is
@@ -32,6 +32,12 @@ sometimes advertise a stale address, so the URL on the address the reply actuall
 listed first; `OnvifDevice.isReachableEndpoint(url)` checks one without credentials.
 
 On Android the library's manifest already declares `CHANGE_WIFI_MULTICAST_STATE` and `INTERNET`.
+An app that targets Android 17 (API 37) or higher must also declare
+`android.permission.ACCESS_LOCAL_NETWORK` in its own manifest and request it at runtime before
+collecting the flow: Android 17 blocks local-network UDP for those apps until the user grants it,
+and discovery then fails with an `IOException`. The library does not declare that permission
+itself, because Android grants local-network access implicitly to apps targeting API 36 or lower
+and advises against declaring it there. The demo's `MainActivity` shows the request.
 
 ## Connect to a camera and read its information
 
