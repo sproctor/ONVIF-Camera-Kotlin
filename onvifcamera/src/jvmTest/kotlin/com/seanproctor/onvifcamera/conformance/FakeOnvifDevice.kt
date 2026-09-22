@@ -43,6 +43,14 @@ private const val WSU_NS = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-
 private const val PASSWORD_DIGEST_TYPE =
     "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest"
 
+internal const val SNAPSHOT_PATH = "/onvifsnapshot/media_service/snapshot"
+
+/** Not a decodable picture, but it starts like one (SOI, APP0) and that is what the checks need. */
+internal val SNAPSHOT_JPEG: ByteArray =
+    byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0xE0.toByte()) +
+        "conformance snapshot".encodeToByteArray() +
+        byteArrayOf(0xFF.toByte(), 0xD9.toByte())
+
 /** Operations the ONVIF access policy opens to unauthenticated callers. */
 private val PRE_AUTH_OPERATIONS = setOf("GetSystemDateAndTime", "GetServices", "GetServiceCapabilities", "GetHostname")
 
@@ -97,6 +105,9 @@ internal class FakeOnvifDevice(
     /** How many requests carried a WS-Security UsernameToken, valid or not. */
     val usernameTokens = AtomicInteger()
 
+    /** How many snapshot GETs were served. */
+    val snapshotGets = AtomicInteger()
+
     private val realm = "onvif-conformance"
     private val nonce = UUID.randomUUID().toString().replace("-", "")
 
@@ -122,6 +133,10 @@ internal class FakeOnvifDevice(
     private fun handle(exchange: HttpExchange) {
         val path = exchange.requestURI.path
         val body = exchange.requestBody.readBytes().decodeToString()
+        if (path == SNAPSHOT_PATH) {
+            snapshot(exchange)
+            return
+        }
         if (exchange.requestMethod != "POST") {
             violate("$path: ${exchange.requestMethod} instead of POST")
             respond(exchange, 405, "text/plain", "")
@@ -356,7 +371,30 @@ internal class FakeOnvifDevice(
     private fun streamUri(token: String) =
         "rtsp://$advertisedHost:554/cam/realmonitor?channel=1&subtype=${if (token == MAIN_PROFILE) 0 else 1}&unicast=true&proto=Onvif"
 
-    private fun snapshotUri() = "http://$advertisedHost/onvifsnapshot/media_service/snapshot?channel=1&subtype=0"
+    // The port is this server's: the client rewrites the host but must keep the camera's port.
+    private fun snapshotUri() = "http://$advertisedHost:$port$SNAPSHOT_PATH?channel=1&subtype=0"
+
+    /**
+     * The snapshot resource: a plain HTTP GET behind the same Digest (or Basic) challenge as the
+     * SOAP services, as the ONVIF Streaming Specification requires. WS-Security means nothing
+     * here, so a client must answer the HTTP challenge, and must not answer it with Basic when
+     * Digest was offered.
+     */
+    private fun snapshot(x: HttpExchange) {
+        if (x.requestMethod != "GET") {
+            violate("snapshot: ${x.requestMethod} instead of GET")
+            respond(x, 405, "text/plain", "")
+            return
+        }
+        if (credentials != null && !authorized(x, SNAPSHOT_PATH)) {
+            challenge(x)
+            return
+        }
+        snapshotGets.incrementAndGet()
+        x.responseHeaders.add("Content-Type", "image/jpeg")
+        x.sendResponseHeaders(200, SNAPSHOT_JPEG.size.toLong())
+        x.responseBody.use { it.write(SNAPSHOT_JPEG) }
+    }
 
     // ---- WS-Security UsernameToken --------------------------------------------------------------
 
@@ -430,8 +468,10 @@ internal class FakeOnvifDevice(
             .associate { m -> m.groupValues[1] to m.groupValues[2].ifEmpty { m.groupValues[3] } }
         if (p["realm"] != realm) violate("$path: Digest realm '${p["realm"]}' is not the challenged realm")
         if (p["nonce"] != nonce) violate("$path: Digest nonce is not the challenged nonce")
+        // RFC 7616: the digest-uri is the request-target, query string included.
+        val requestTarget = x.requestURI.rawPath + (x.requestURI.rawQuery?.let { "?$it" } ?: "")
         val uri = p["uri"]
-        if (uri != path) violate("$path: Digest uri '$uri' is not the request path")
+        if (uri != requestTarget) violate("$path: Digest uri '$uri' is not the request-target '$requestTarget'")
         if (p["username"] != user) return false
         val ha1 = md5("$user:$realm:$pass")
         val ha2 = md5("${x.requestMethod}:$uri")

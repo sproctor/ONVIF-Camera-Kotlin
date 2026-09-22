@@ -27,6 +27,8 @@ public final class com/seanproctor/onvifcamera/OnvifDevice : java/lang/AutoClose
 	public fun close ()V
 	public final fun getDeviceInformation (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getProfiles (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getSnapshot (Lcom/seanproctor/onvifcamera/MediaProfile;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getSnapshot (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getSnapshotURI (Lcom/seanproctor/onvifcamera/MediaProfile;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getStreamURI (Lcom/seanproctor/onvifcamera/MediaProfile;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }

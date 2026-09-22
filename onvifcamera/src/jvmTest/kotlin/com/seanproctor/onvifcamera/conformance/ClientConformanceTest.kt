@@ -181,7 +181,44 @@ class ClientConformanceTest {
     fun `MEDIA2 - GetSnapshotUri is read and its host rewritten`() {
         FakeOnvifDevice().use { fake ->
             val uri = fake.withDevice { device -> runBlocking { device.getSnapshotURI(device.getProfiles()[0]) } }
-            assertEquals("http://${fake.host}/onvifsnapshot/media_service/snapshot?channel=1&subtype=0", uri)
+            assertEquals("http://${fake.host}:${fake.port}$SNAPSHOT_PATH?channel=1&subtype=0", uri)
+            assertConformant(fake)
+        }
+    }
+
+    @Test
+    fun `SNAPSHOT - the image is fetched through the device's client, answering Digest and never Basic`() {
+        FakeOnvifDevice().use { fake ->
+            val (byProfile, byUri) = fake.withDevice { device ->
+                runBlocking {
+                    val profile = device.getProfiles()[0]
+                    device.getSnapshot(profile) to device.getSnapshot(device.getSnapshotURI(profile))
+                }
+            }
+            assertTrue(SNAPSHOT_JPEG.contentEquals(byProfile), "snapshot bytes by profile")
+            assertTrue(SNAPSHOT_JPEG.contentEquals(byUri), "snapshot bytes by URI")
+            assertEquals(2, fake.snapshotGets.get())
+            // A plain GET cannot carry WS-Security, so this is the one place the HTTP challenge is
+            // expected even from a WS-Security client.
+            assertTrue(fake.challenges.get() >= 1, "the snapshot GET should have been challenged and answered")
+            assertConformant(fake)
+        }
+    }
+
+    @Test
+    fun `SNAPSHOT - a 200 that is not an image is OnvifInvalidResponse, and a missing profile is the device's fault`() {
+        FakeOnvifDevice(htmlPageFor = setOf("GetSnapshotUri")).use { fake ->
+            fake.withDevice { device ->
+                assertFailsWith<OnvifInvalidResponse> { runBlocking { device.getSnapshot(device.getProfiles()[0]) } }
+            }
+            assertConformant(fake)
+        }
+        FakeOnvifDevice().use { fake ->
+            fake.withDevice { device ->
+                val e = assertFailsWith<OnvifFault> { runBlocking { device.getSnapshot(device.getProfiles()[1]) } }
+                assertEquals(listOf("ActionNotSupported"), e.subcodes)
+            }
+            assertEquals(0, fake.snapshotGets.get(), "no GET when the device refuses the URI")
             assertConformant(fake)
         }
     }
@@ -202,7 +239,7 @@ class ClientConformanceTest {
                 val stream = runBlocking { device.getStreamURI(profiles[1]) }
                 assertEquals("rtsp://${fake.host}:554/cam/realmonitor?channel=1&subtype=1&unicast=true&proto=Onvif", stream)
                 val snapshot = runBlocking { device.getSnapshotURI(profiles[0]) }
-                assertEquals("http://${fake.host}/onvifsnapshot/media_service/snapshot?channel=1&subtype=0", snapshot)
+                assertEquals("http://${fake.host}:${fake.port}$SNAPSHOT_PATH?channel=1&subtype=0", snapshot)
             }
             assertTrue(fake.operations.none { it.startsWith("media2_service") }, fake.operations.toString())
             assertEquals(

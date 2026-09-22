@@ -84,6 +84,11 @@ val snapshotUri = try {
 } catch (e: OnvifFault) {
     null
 }
+
+// The snapshot itself is a plain HTTP resource behind the camera's HTTP Digest, not a SOAP
+// operation. Fetch it through the device so the same credentials answer the challenge; every
+// call is a fresh frame, so keep the URI and poll with it.
+val jpeg: ByteArray? = snapshotUri?.let { device.getSnapshot(it) }
 ```
 
 ## Errors
