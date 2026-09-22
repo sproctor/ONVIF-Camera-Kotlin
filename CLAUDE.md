@@ -70,8 +70,9 @@ XML strings and parses responses with kotlinx-serialization XML.
    `HttpClient` per call, installs Basic + Digest auth when credentials are present, posts the SOAP
    body, checks every response body for a SOAP fault (`parseOnvifFault`; cameras send faults with
    200 as well as 400/500) and throws it as `OnvifFault`, then maps remaining non-2xx statuses to
-   `OnvifUnauthorized`, `OnvifForbidden` or `OnvifInvalidResponse`. All are subclasses of the
-   sealed `OnvifException` in `Exceptions.kt`; a `NotAuthorized` fault becomes `OnvifUnauthorized`.
+   `OnvifUnauthorized`, `OnvifForbidden` or `OnvifInvalidResponse`. All are subclasses of
+   `OnvifException` in `Exceptions.kt`, which is abstract with an internal constructor rather than
+   sealed so new subclasses are additive; a `NotAuthorized` fault becomes `OnvifUnauthorized`.
 5. **`OnvifXmlParser`** parses responses. Every response is an `Envelope<T>` (see `soap/Envelope.kt`)
    wrapping a typed body; `parseSoap<T>()` is the generic decoder. The `soap/` package holds the
    `@Serializable` data classes for each response type. The parser is lenient

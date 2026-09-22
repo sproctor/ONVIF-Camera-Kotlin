@@ -3,8 +3,13 @@ package com.seanproctor.onvifcamera
 /**
  * Base of every failure this library raises about a device. Catch this to handle any of them;
  * catch a subclass to handle one.
+ *
+ * Deliberately not sealed. The constructor is internal, so every instance still comes from this
+ * library, but a `when` over the subclasses needs an `else`: the set is not closed, and a sealed
+ * base would turn each new subclass into a compile error for consumers, or a runtime
+ * `NoWhenBranchMatchedException` for ones already compiled.
  */
-public sealed class OnvifException(message: String) : Exception(message)
+public abstract class OnvifException internal constructor(message: String) : Exception(message)
 
 /**
  * The device answered 401, or with a SOAP fault whose subcode is `NotAuthorized`: the
