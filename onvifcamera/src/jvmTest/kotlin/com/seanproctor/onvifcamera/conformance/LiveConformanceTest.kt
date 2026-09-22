@@ -54,34 +54,34 @@ class LiveConformanceTest {
         assumeTrue("Set ONVIF_CONFORMANCE_URL (and USERNAME/PASSWORD) to run against a real camera", url != null)
         val accounting = Accounting()
         runBlocking {
-            val device = OnvifDevice.requestDevice(url!!, username, password, accounting)
-            val info = device.getDeviceInformation()
-            println("LIVE device: ${info.manufacturer} ${info.model} firmware ${info.firmwareVersion}")
-            assertTrue(info.manufacturer.isNotBlank(), "manufacturer")
+            OnvifDevice.requestDevice(url!!, username, password, accounting).use { device ->
+                val info = device.getDeviceInformation()
+                println("LIVE device: ${info.manufacturer} ${info.model} firmware ${info.firmwareVersion}")
+                assertTrue(info.manufacturer.isNotBlank(), "manufacturer")
 
-            val profiles = device.getProfiles()
-            println("LIVE profiles: " + profiles.joinToString { "${it.token} ${it.encoding} ${it.width}x${it.height}" })
-            assertTrue(profiles.isNotEmpty(), "the camera reported no media profiles")
-            val video = profiles.first { it.encoding != null }
-            assertTrue(video.width != null && video.height != null, "video profile ${video.token} has no resolution")
+                val profiles = device.getProfiles()
+                println("LIVE profiles: " + profiles.joinToString { "${it.token} ${it.encoding} ${it.width}x${it.height}" })
+                assertTrue(profiles.isNotEmpty(), "the camera reported no media profiles")
+                val video = profiles.first { it.encoding != null }
+                assertTrue(video.width != null && video.height != null, "video profile ${video.token} has no resolution")
 
-            val stream = device.getStreamURI(video)
-            println("LIVE stream: $stream")
-            assertTrue(stream.startsWith("rtsp://", ignoreCase = true), "stream URI is not RTSP: $stream")
-            assertEquals(Url(url).host, Url(stream).host, "stream URI host was not rewritten to the address used")
+                val stream = device.getStreamURI(video)
+                println("LIVE stream: $stream")
+                assertTrue(stream.startsWith("rtsp://", ignoreCase = true), "stream URI is not RTSP: $stream")
+                assertEquals(Url(url).host, Url(stream).host, "stream URI host was not rewritten to the address used")
 
-            val snapshot = try {
-                device.getSnapshotURI(video)
-            } catch (e: OnvifFault) {
-                println("LIVE snapshot: not offered (${e.message})")
-                null
+                val snapshot = try {
+                    device.getSnapshotURI(video)
+                } catch (e: OnvifFault) {
+                    println("LIVE snapshot: not offered (${e.message})")
+                    null
+                }
+                if (snapshot != null) {
+                    println("LIVE snapshot: $snapshot")
+                    assertTrue(snapshot.startsWith("http", ignoreCase = true), "snapshot URI is not HTTP: $snapshot")
+                    assertEquals(Url(url).host, Url(snapshot).host, "snapshot URI host was not rewritten to the address used")
+                }
             }
-            if (snapshot != null) {
-                println("LIVE snapshot: $snapshot")
-                assertTrue(snapshot.startsWith("http", ignoreCase = true), "snapshot URI is not HTTP: $snapshot")
-                assertEquals(Url(url).host, Url(snapshot).host, "snapshot URI host was not rewritten to the address used")
-            }
-            device.close()
         }
         // Six operations: GetSystemDateAndTime, GetServices, then four. A camera that accepts the
         // WS-UsernameToken needs exactly six requests and no 401; one that authenticates at the
