@@ -68,6 +68,12 @@ class MainViewModel(
                             }
                 }
             }
+            // Discovery fails the flow if the socket cannot be opened or read; surface it
+            // rather than let it escape the LaunchedEffect collecting this.
+            .catch { e ->
+                logger.error("Discovery failed", e)
+                _errorText.value = "Discovery failed: ${e.message}"
+            }
             .onCompletion {
                 logger.debug("Stopped scanning")
             }

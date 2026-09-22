@@ -74,9 +74,13 @@ import `java.net.*` directly, which is why iOS isn't supported yet.
 - `SocketListener` / `BaseSocketListener` do the multicast work (group `239.255.255.250:3702`).
   The Android vs JVM subclasses differ only in `acquireMulticastLock`/`releaseMulticastLock`
   (`AndroidSocketListener` holds a WifiManager `MulticastLock`; the JVM one is a no-op).
-- `discoverDevices()` returns a `Flow<List<DiscoveredOnvifDevice>>` backed by a `MutableStateFlow`
-  of a `persistentHashMap` keyed by source `InetAddress`, so the list grows as probe responses
-  arrive and dedupes by address.
+- `discoverDevices(retryCount)` returns a **cold** `Flow<List<DiscoveredOnvifDevice>>`: collecting
+  it opens the socket, probes, and listens until the collector is cancelled, which closes the socket
+  (a read timeout bounds that). It is a `runningFold` over an immutable map keyed by source
+  `InetAddress` — dedupes by address, keeps discovery order, `distinctUntilChanged` conflates
+  identical retry replies. Socket I/O and parsing run on `Dispatchers.IO`. Socket errors fail the
+  flow; unparseable replies are logged and dropped. `OnvifDiscoveryManagerImplTest` drives the
+  pipeline with a scripted `SocketListener`.
 
 ### Logging
 
