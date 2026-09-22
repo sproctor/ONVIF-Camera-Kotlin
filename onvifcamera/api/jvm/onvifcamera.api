@@ -1,0 +1,95 @@
+public final class com/seanproctor/onvifcamera/DiscoveredOnvifDevice {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAddresses ()Ljava/util/List;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getScopes ()Ljava/util/List;
+	public final fun getTypes ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/seanproctor/onvifcamera/MediaProfile {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Integer;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEncoding ()Ljava/lang/String;
+	public final fun getHeight ()Ljava/lang/Integer;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getToken ()Ljava/lang/String;
+	public final fun getWidth ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/seanproctor/onvifcamera/OnvifDevice {
+	public static final field Companion Lcom/seanproctor/onvifcamera/OnvifDevice$Companion;
+	public final fun getDeviceInformation (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getProfiles (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getSnapshotURI (Lcom/seanproctor/onvifcamera/MediaProfile;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getStreamURI (Lcom/seanproctor/onvifcamera/MediaProfile;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/seanproctor/onvifcamera/OnvifDevice$Companion {
+	public final fun getHostname (Ljava/lang/String;Lcom/seanproctor/onvifcamera/OnvifLogger;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun getHostname$default (Lcom/seanproctor/onvifcamera/OnvifDevice$Companion;Ljava/lang/String;Lcom/seanproctor/onvifcamera/OnvifLogger;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun isReachableEndpoint (Ljava/lang/String;Lcom/seanproctor/onvifcamera/OnvifLogger;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun isReachableEndpoint$default (Lcom/seanproctor/onvifcamera/OnvifDevice$Companion;Ljava/lang/String;Lcom/seanproctor/onvifcamera/OnvifLogger;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun requestDevice (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/seanproctor/onvifcamera/OnvifLogger;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun requestDevice$default (Lcom/seanproctor/onvifcamera/OnvifDevice$Companion;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/seanproctor/onvifcamera/OnvifLogger;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class com/seanproctor/onvifcamera/OnvifDeviceInformation {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFirmwareVersion ()Ljava/lang/String;
+	public final fun getHardwareId ()Ljava/lang/String;
+	public final fun getManufacturer ()Ljava/lang/String;
+	public final fun getModel ()Ljava/lang/String;
+	public final fun getSerialNumber ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class com/seanproctor/onvifcamera/OnvifException : java/lang/Exception {
+}
+
+public final class com/seanproctor/onvifcamera/OnvifFault : com/seanproctor/onvifcamera/OnvifException {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun getCode ()Ljava/lang/String;
+	public final fun getDetail ()Ljava/lang/String;
+	public final fun getReason ()Ljava/lang/String;
+	public final fun getSubcodes ()Ljava/util/List;
+}
+
+public final class com/seanproctor/onvifcamera/OnvifForbidden : com/seanproctor/onvifcamera/OnvifException {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class com/seanproctor/onvifcamera/OnvifInvalidResponse : com/seanproctor/onvifcamera/OnvifException {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public abstract interface class com/seanproctor/onvifcamera/OnvifLogger {
+	public abstract fun debug (Ljava/lang/String;)V
+	public abstract fun error (Ljava/lang/String;Ljava/lang/Throwable;)V
+}
+
+public final class com/seanproctor/onvifcamera/OnvifServiceUnavailable : com/seanproctor/onvifcamera/OnvifException {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun getNamespace ()Ljava/lang/String;
+}
+
+public final class com/seanproctor/onvifcamera/OnvifUnauthorized : com/seanproctor/onvifcamera/OnvifException {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public abstract interface class com/seanproctor/onvifcamera/network/OnvifDiscoveryManager {
+	public abstract fun discoverDevices ()Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class com/seanproctor/onvifcamera/network/OnvifDiscoveryManagerKt {
+	public static final fun OnvifDiscoveryManager (Lcom/seanproctor/onvifcamera/OnvifLogger;)Lcom/seanproctor/onvifcamera/network/OnvifDiscoveryManager;
+	public static synthetic fun OnvifDiscoveryManager$default (Lcom/seanproctor/onvifcamera/OnvifLogger;ILjava/lang/Object;)Lcom/seanproctor/onvifcamera/network/OnvifDiscoveryManager;
+}
+

@@ -6,13 +6,14 @@ plugins {
 }
 
 group = "com.seanproctor"
-version = "2.2.1"
+version = "3.0.0"
 
 kotlin {
-    androidLibrary {
+    android {
         minSdk = 23
-        compileSdk = 36
+        compileSdk = 37
         namespace = "com.seanproctor.onvifcamera"
+        // Without this the commonTest suite runs on the JVM target only.
         withHostTest { }
     }
     jvm()
@@ -21,6 +22,14 @@ kotlin {
 //    iosSimulatorArm64()
 
     explicitApi()
+
+    // Kotlin's built-in ABI validation rather than the binary-compatibility-validator plugin:
+    // under AGP 9 the plugin never registers tasks for the Android target
+    // (Kotlin/binary-compatibility-validator#312), so it could not cover the androidMain
+    // factory. Dumps live in api/<target>/; checkKotlinAbi runs as part of check, and
+    // updateLegacyAbi regenerates the dumps after a public API change.
+    @OptIn(org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation::class)
+    abiValidation()
 
     sourceSets {
         commonMain {
@@ -33,14 +42,13 @@ kotlin {
                 implementation(libs.ktor.client.core)
                 implementation(libs.ktor.client.auth)
                 implementation(libs.ktor.client.logging)
-                implementation(libs.ktor.network)
-                implementation(libs.kotlinx.collections.immutable)
             }
         }
 
         commonTest {
             dependencies {
                 implementation(kotlin("test"))
+                implementation(libs.kotlinx.coroutines.test)
             }
         }
     }

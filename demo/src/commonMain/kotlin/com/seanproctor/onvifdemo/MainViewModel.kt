@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.seanproctor.onvifcamera.OnvifDevice
+import com.seanproctor.onvifcamera.OnvifException
 import com.seanproctor.onvifcamera.OnvifLogger
 import com.seanproctor.onvifcamera.network.OnvifDiscoveryManager
 import io.github.aakira.napier.Napier
@@ -43,7 +44,7 @@ class MainViewModel(
 
     private val cachedCameras = mutableMapOf<String, CameraInformation>()
     fun discoverDevices(): Flow<List<CameraInformation>> =
-        onvifDiscoveryManager.discoverDevices(2)
+        onvifDiscoveryManager.discoverDevices()
             .map { onvifDevices ->
                 onvifDevices.mapNotNull { onvifDevice ->
                     // TODO: make this an async call
@@ -68,6 +69,12 @@ class MainViewModel(
                             }
                 }
             }
+            // Discovery fails the flow if the socket cannot be opened or read; surface it
+            // rather than let it escape the LaunchedEffect collecting this.
+            .catch { e ->
+                logger.error("Discovery failed", e)
+                _errorText.value = "Discovery failed: ${e.message}"
+            }
             .onCompletion {
                 logger.debug("Stopped scanning")
             }
@@ -79,6 +86,11 @@ class MainViewModel(
         val password = password.trim()
 
         if (address.isNotEmpty()) {
+            // Whatever the previous camera offered must not survive into this connection: a
+            // lookup that fails or is skipped below would otherwise leave the old URI in place,
+            // and getSnapshot() would fetch from the old camera with the new credentials.
+            streamUri = null
+            snapshotUri = null
             viewModelScope.launch(Dispatchers.IO) {
                 try {
                     // Get camera services
@@ -98,16 +110,16 @@ class MainViewModel(
                     Napier.d("Getting device profiles")
                     val profiles = device.getProfiles()
 
-                    profiles.firstOrNull { it.canSnapshot() }?.let {
-                        Napier.d("Getting snapshot URI")
-                        device.getSnapshotURI(it).let { uri ->
-                            snapshotUri = uri
-                        }
-                    }
-                    profiles.firstOrNull { it.canStream() }?.let {
+                    // Any profile with a video encoder can be asked for a stream. Whether it
+                    // can also supply a snapshot is the device's answer, not the profile's.
+                    profiles.firstOrNull { it.encoding != null }?.let { profile ->
                         Napier.d("Getting stream URI")
-                        device.getStreamURI(it).let { uri ->
-                            streamUri = uri
+                        streamUri = device.getStreamURI(profile)
+                        Napier.d("Getting snapshot URI")
+                        try {
+                            snapshotUri = device.getSnapshotURI(profile)
+                        } catch (e: OnvifException) {
+                            Napier.w("No snapshot for profile ${profile.token}", e)
                         }
                     }
                 } catch (e: Exception) {

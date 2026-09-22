@@ -177,6 +177,10 @@ fun CameraListContent(
                 .collect {
                     discoveredDevices = it
                 }
+            // Discovery never completes on its own; a cancelled scan does not get here either.
+            // Reaching this line means it failed (the view model has shown the error), so drop
+            // back to the Scan button instead of sitting in the scanning state.
+            scanning = false
         }
     }
 }

@@ -5,12 +5,20 @@ import nl.adaptivity.xmlutil.serialization.XmlElement
 import nl.adaptivity.xmlutil.serialization.XmlSerialName
 
 private const val DEVICE_NS = "http://www.onvif.org/ver10/device/wsdl"
-private const val MEDIA10_NS = "http://www.onvif.org/ver10/media/wsdl"
 private const val MEDIA20_NS = "http://www.onvif.org/ver20/media/wsdl"
 
+/**
+ * Media2 `GetProfiles`. Without a `Type` the device returns tokens and names only; each `Type`
+ * names a configuration kind to include (`tr2:ConfigurationEnumeration`: `VideoEncoder`,
+ * `AudioEncoder`, `PTZ`, ... or `All`). Serialised as one `<Type>` element per entry.
+ */
 @Serializable
-@XmlSerialName("GetProfiles", MEDIA10_NS, "")
-internal class GetProfilesRequest
+@XmlSerialName("GetProfiles", MEDIA20_NS, "")
+internal class GetProfilesRequest(
+    @XmlElement(true)
+    @XmlSerialName("Type", MEDIA20_NS, "")
+    val type: List<String>,
+)
 
 @Serializable
 @XmlSerialName("GetStreamUri", MEDIA20_NS, "")

@@ -1,19 +1,16 @@
 package com.seanproctor.onvifcamera
 
 /**
- * Informs us of what and where to send to the device
+ * The device-service operations and where to send them. Media operations are not here: their
+ * service is chosen per device, see [MediaService].
  */
 internal enum class OnvifRequestType {
 
     GetServices,
-    GetDeviceInformation,
-    GetProfiles,
-    GetStreamURI,
-    GetSnapshotURI;
+    GetDeviceInformation;
 
     fun namespace(): String =
         when (this) {
             GetServices, GetDeviceInformation -> "http://www.onvif.org/ver10/device/wsdl"
-            GetProfiles, GetStreamURI, GetSnapshotURI -> "http://www.onvif.org/ver20/media/wsdl"
         }
 }

@@ -35,26 +35,60 @@ public class OnvifDevice internal constructor(
         return parseOnvifDeviceInformation(response)
     }
 
+    /** Media2 when the device offers it, else Media1, else null; fixed when the device is created. */
+    private val media: MediaService? = MediaService.offeredBy(namespaceMap.keys)
+
+    /**
+     * The device's media profiles, from Media2 when it offers that service and from Media1
+     * otherwise.
+     *
+     * @throws OnvifServiceUnavailable if the device offers neither media service
+     * @throws OnvifException if the device rejects the request or answers with something else
+     */
     public suspend fun getProfiles(): List<MediaProfile> {
-        val endpoint = getEndpointForRequest(OnvifRequestType.GetProfiles)
-        val response = execute(endpoint, profilesCommand, username, password, logger)
-        return parseOnvifProfiles(response)
+        val media = mediaService()
+        val response = execute(endpointOf(media), profilesCommand(media), username, password, logger)
+        return parseOnvifProfiles(media, response)
     }
 
+    /**
+     * The RTSP URI for [profile]'s stream, with the host rewritten to the one this device was
+     * reached on. Uses the same media service as [getProfiles].
+     *
+     * @throws OnvifServiceUnavailable if the device offers neither media service
+     * @throws OnvifException if the device rejects the request or answers with something else
+     */
     public suspend fun getStreamURI(profile: MediaProfile): String {
-        val endpoint = getEndpointForRequest(OnvifRequestType.GetStreamURI)
-        val response = execute(endpoint, getStreamURICommand(profile), username, password, logger)
-        return fixHost(parseOnvifStreamUri(response))
+        val media = mediaService()
+        val response = execute(endpointOf(media), getStreamURICommand(media, profile), username, password, logger)
+        return fixHost(parseOnvifStreamUri(media, response))
     }
 
+    /**
+     * The HTTP URI of a JPEG snapshot for [profile], with the host rewritten to the one this
+     * device was reached on. Uses the same media service as [getProfiles]. A device that cannot
+     * supply one answers with a SOAP fault.
+     *
+     * @throws OnvifServiceUnavailable if the device offers neither media service
+     * @throws OnvifException if the device rejects the request or answers with something else
+     */
     public suspend fun getSnapshotURI(profile: MediaProfile): String {
-        val endpoint = getEndpointForRequest(OnvifRequestType.GetSnapshotURI)
-        val response = execute(endpoint, getSnapshotURICommand(profile), username, password, logger)
-        return fixHost(parseOnvifSnapshotUri(response))
+        val media = mediaService()
+        val response = execute(endpointOf(media), getSnapshotURICommand(media, profile), username, password, logger)
+        return fixHost(parseOnvifSnapshotUri(media, response))
     }
+
+    private fun mediaService(): MediaService = media ?: throw OnvifServiceUnavailable(
+        namespace = MediaService.MEDIA2.namespace,
+        message = "Device offers neither Media2 (${MediaService.MEDIA2.namespace}) nor Media1 " +
+            "(${MediaService.MEDIA1.namespace}), so it has no profiles, stream URIs or snapshot URIs to give",
+    )
+
+    private fun endpointOf(media: MediaService): String = buildUrl(namespaceMap.getValue(media.namespace))
 
     private fun getEndpointForRequest(requestType: OnvifRequestType): String {
-        val path = namespaceMap[requestType.namespace()] ?: throw OnvifServiceUnavailable()
+        val namespace = requestType.namespace()
+        val path = namespaceMap[namespace] ?: throw OnvifServiceUnavailable(namespace)
         return buildUrl(path)
     }
 
@@ -76,10 +110,23 @@ public class OnvifDevice internal constructor(
     }
 
     public companion object {
+        /**
+         * Connects to the device at [url], asks it which services it offers and returns a handle
+         * for later requests. Credentials are optional; leave both null for a device that does
+         * not require authentication.
+         *
+         * The services list decides which media service the handle uses: Media2 if the device
+         * offers it, Media1 otherwise. A device offering neither still connects, and its device
+         * operations work, but [getProfiles], [getStreamURI] and [getSnapshotURI] throw
+         * [OnvifServiceUnavailable].
+         *
+         * @throws OnvifException if the device rejects the request or answers with something
+         *   that is not a services list
+         */
         public suspend fun requestDevice(
             url: String,
-            username: String?,
-            password: String?,
+            username: String? = null,
+            password: String? = null,
             logger: OnvifLogger? = null,
         ): OnvifDevice {
             val result = execute(
@@ -172,19 +219,30 @@ public class OnvifDevice internal constructor(
                     contentType(soapContentType)
                     setBody(body)
                 }
+                val body = response.bodyAsText()
+                // A fault can arrive with any status: the spec wants 400 or 500, some cameras
+                // send 200. So every body is checked, and a fault outranks the status.
+                val fault = parseOnvifFault(body)
+                if (fault != null) throw fault.toException()
                 if (response.status.value in 200..299) {
-                    return response.bodyAsText()
-                } else {
-                    throw when (response.status.value) {
-                        401 -> OnvifUnauthorized("Unauthorized")
-                        403 -> OnvifForbidden("Forbidden")
-                        else -> OnvifInvalidResponse("Invalid response from device: ${response.status}")
-                    }
+                    return body
+                }
+                throw when (response.status.value) {
+                    401 -> OnvifUnauthorized("Unauthorized")
+                    403 -> OnvifForbidden("Forbidden")
+                    else -> OnvifInvalidResponse("Invalid response from device: ${response.status}")
                 }
             }
         }
     }
 }
+
+/**
+ * A `NotAuthorized` fault is a device saying the credentials are wrong in SOAP rather than in
+ * HTTP, so it maps to the same exception a 401 does. Every other fault is reported as itself.
+ */
+private fun OnvifFault.toException(): OnvifException =
+    if ("NotAuthorized" in subcodes) OnvifUnauthorized(message ?: "Not authorized") else this
 
 private val soapContentType: ContentType =
     ContentType(

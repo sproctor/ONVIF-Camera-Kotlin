@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://www.w3.org/2003/05/soap-envelope"
+                   xmlns:ter="http://www.onvif.org/ver10/error">
+    <SOAP-ENV:Body>
+        <SOAP-ENV:Fault>
+            <SOAP-ENV:Code>
+                <SOAP-ENV:Value>SOAP-ENV:Sender</SOAP-ENV:Value>
+                <SOAP-ENV:Subcode>
+                    <SOAP-ENV:Value>ter:InvalidArgVal</SOAP-ENV:Value>
+                    <SOAP-ENV:Subcode>
+                        <SOAP-ENV:Value>ter:NoConfig</SOAP-ENV:Value>
+                    </SOAP-ENV:Subcode>
+                </SOAP-ENV:Subcode>
+            </SOAP-ENV:Code>
+            <SOAP-ENV:Reason>
+                <SOAP-ENV:Text xml:lang="en">The requested configuration does not exist.</SOAP-ENV:Text>
+            </SOAP-ENV:Reason>
+            <SOAP-ENV:Detail>
+                <ter:Error>
+                    <ter:Token>VideoEncoder_9</ter:Token>
+                    <ter:Description>No video encoder configuration has that token &amp; none can be made.</ter:Description>
+                </ter:Error>
+            </SOAP-ENV:Detail>
+        </SOAP-ENV:Fault>
+    </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
