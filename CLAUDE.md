@@ -112,6 +112,11 @@ Parser tests live in `onvifcamera/src/commonTest` and decode real captured camer
 `onvifcamera/src/commonTest/resources/*.xml`. Reading those resource files goes through an
 `expect/actual` `readResourceFile` (`TestUtil.kt` + per-target `TestUtil.<platform>.kt`). When
 adding support for a new camera quirk, add its captured response as a resource and a parser test.
+Exception: the three profile fixtures (`profiles.xml`, `profiles2.xml`, `lorex.xml`) are Media1
+captures restructured by hand into Media2 (`tr2:GetProfilesResponse`) responses, because
+`GetProfiles` is sent to Media2 with `Type=VideoEncoder` (the library finds cameras and their
+streams, not audio devices) and no Media2 capture existed when it switched. Replace them with real
+captures when one is available.
 
 ## Demo app notes
 

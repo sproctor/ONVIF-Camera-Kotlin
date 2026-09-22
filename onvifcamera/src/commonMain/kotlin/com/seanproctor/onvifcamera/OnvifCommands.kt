@@ -20,7 +20,9 @@ internal object OnvifCommands {
         return SoapXml(module).encodeToString(serializer<Envelope<T>>(), Envelope(data))
     }
 
-    internal val profilesCommand: String = encodeSoap(GetProfilesRequest())
+    // Only the video encoder: this library finds cameras and their streams, not audio devices,
+    // and every field MediaProfile exposes comes from that one configuration.
+    internal val profilesCommand: String = encodeSoap(GetProfilesRequest(type = listOf("VideoEncoder")))
 
     internal fun getStreamURICommand(profile: MediaProfile, protocol: String = "RTSP"): String =
         encodeSoap(GetStreamUriRequest(profileToken = profile.token, protocol = protocol))

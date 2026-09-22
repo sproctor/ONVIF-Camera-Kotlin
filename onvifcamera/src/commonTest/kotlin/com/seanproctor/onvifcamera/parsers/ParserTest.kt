@@ -56,7 +56,7 @@ class ParserTest {
 
     @Test
     fun testLorexProfilesResponseParser() {
-        // The Lorex camera returns a profile whose VideoEncoderConfiguration has no Encoding
+        // The Lorex camera returns a profile whose video encoder configuration has no Encoding
         // element; the parser must tolerate the missing encoding rather than failing.
         val input = readResourceFile("lorex.xml")
         val result = parseOnvifProfiles(input)

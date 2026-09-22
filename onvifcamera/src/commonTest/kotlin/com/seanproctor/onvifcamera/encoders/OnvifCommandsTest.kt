@@ -101,7 +101,11 @@ class OnvifCommandsTest {
     fun testProfilesCommand() {
         val command = OnvifCommands.profilesCommand
         assertWellFormed(command)
-        assertEquals(MEDIA10_NS, namespaceOf(command, "GetProfiles"))
+        assertEquals(MEDIA20_NS, namespaceOf(command, "GetProfiles"))
+        // Media2 returns tokens and names only unless asked for configurations; the video
+        // encoder is the one MediaProfile is built from.
+        assertEquals(MEDIA20_NS, namespaceOf(command, "Type"))
+        assertEquals("VideoEncoder", readElementText(command, "Type"))
     }
 
     @Test

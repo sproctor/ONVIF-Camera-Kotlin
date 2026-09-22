@@ -69,8 +69,7 @@ private fun String.localName(): String = trim().substringAfterLast(':')
  * to their text nodes, entities decoded and whitespace collapsed. Null when there is none.
  */
 private fun detailText(fragment: CompactFragment): String? {
-    val reader = fragment.getXmlReader()
-    val text = try {
+    val text = fragment.getXmlReader().use { reader ->
         buildString {
             while (reader.hasNext()) {
                 when (reader.next()) {
@@ -81,8 +80,6 @@ private fun detailText(fragment: CompactFragment): String? {
                 }
             }
         }
-    } finally {
-        reader.close()
     }
     return text.replace(WHITESPACE, " ").trim().ifEmpty { null }
 }
@@ -93,12 +90,13 @@ internal fun parseOnvifProfiles(input: String): List<MediaProfile> {
     val result = parseSoap<GetProfilesResponse>(input)
 
     return result.profiles.map {
+        val encoder = it.configurations?.videoEncoder
         MediaProfile(
             token = it.token,
             name = it.name,
-            encoding = it.encoder?.encoding,
-            width = it.encoder?.resolution?.width,
-            height = it.encoder?.resolution?.height,
+            encoding = encoder?.encoding,
+            width = encoder?.resolution?.width,
+            height = encoder?.resolution?.height,
         )
     }
 }
