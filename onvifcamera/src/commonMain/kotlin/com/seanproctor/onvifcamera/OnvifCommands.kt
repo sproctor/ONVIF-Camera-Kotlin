@@ -4,7 +4,6 @@ import com.seanproctor.onvifcamera.soap.*
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.serializer
-import nl.adaptivity.xmlutil.serialization.XML
 
 internal object OnvifCommands {
     /**
@@ -18,10 +17,7 @@ internal object OnvifCommands {
                 subclass(T::class, serializer())
             }
         }
-        val xml = XML(module) {
-            autoPolymorphic = true
-        }
-        return xml.encodeToString(serializer<Envelope<T>>(), Envelope(data))
+        return SoapXml(module).encodeToString(serializer<Envelope<T>>(), Envelope(data))
     }
 
     internal val profilesCommand: String = encodeSoap(GetProfilesRequest())
@@ -41,8 +37,7 @@ internal object OnvifCommands {
     internal val getHostnameCommand: String = encodeSoap(GetHostnameRequest())
 
     internal fun probeCommand(messageId: String): String {
-        val xml = XML { autoPolymorphic = true }
-        return xml.encodeToString(
+        return SoapXml().encodeToString(
             ProbeEnvelope.serializer(),
             ProbeEnvelope(header = ProbeHeader(messageId = "uuid:$messageId")),
         )

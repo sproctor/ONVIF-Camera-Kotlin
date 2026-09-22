@@ -4,7 +4,6 @@ import com.seanproctor.onvifcamera.soap.*
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.serializer
-import nl.adaptivity.xmlutil.serialization.XML
 
 private inline fun <reified T : Any> parseSoap(input: String): T {
     val module = SerializersModule {
@@ -13,17 +12,9 @@ private inline fun <reified T : Any> parseSoap(input: String): T {
         }
     }
 
-    val xml = XML(module) {
-        // xmlDeclMode = XmlDeclMode.Minimal
-        autoPolymorphic = true
-        defaultPolicy {
-            pedantic = false
-            ignoreUnknownChildren()
-        }
-    }
     val serializer = serializer<Envelope<T>>()
 
-    return xml.decodeFromString(serializer, input).data
+    return SoapXml(module).decodeFromString(serializer, input).data
 }
 
 internal fun parseOnvifProfiles(input: String): List<MediaProfile> {
