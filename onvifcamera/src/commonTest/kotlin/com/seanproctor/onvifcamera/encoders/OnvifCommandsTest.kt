@@ -4,7 +4,7 @@ import com.seanproctor.onvifcamera.MediaProfile
 import com.seanproctor.onvifcamera.MediaService
 import com.seanproctor.onvifcamera.OnvifCommands
 import com.seanproctor.onvifcamera.WsSecurity
-import java.time.Instant
+import kotlin.time.Instant
 import nl.adaptivity.xmlutil.EventType
 import nl.adaptivity.xmlutil.xmlStreaming
 import kotlin.test.Test

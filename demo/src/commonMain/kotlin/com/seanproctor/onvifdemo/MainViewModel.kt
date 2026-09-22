@@ -134,7 +134,6 @@ class MainViewModel(
 
     override fun onCleared() {
         device?.close()
-        super.onCleared()
     }
 
     fun getSnapshot() {
