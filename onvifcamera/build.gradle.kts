@@ -35,7 +35,6 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(libs.kotlinx.coroutines.core)
-                implementation(libs.kotlinx.datetime)
 
                 implementation(libs.xmlutil.serialization)
                 implementation(libs.xmlutil.serialutil)

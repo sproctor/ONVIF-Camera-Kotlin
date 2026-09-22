@@ -15,9 +15,8 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.io.IOException
-import kotlin.time.Clock
-import kotlin.time.Duration
-import kotlin.time.Instant
+import java.time.Duration
+import java.time.Instant
 
 /**
  * A connected ONVIF device: the handle [requestDevice] returns, holding the services the device
@@ -137,7 +136,7 @@ public class OnvifDevice internal constructor(
     private fun security(): Security? =
         credentials?.let { WsSecurity.usernameToken(it.username, it.password, deviceNow()) }
 
-    private fun deviceNow(): Instant = Clock.System.now().plus(clockOffset ?: Duration.ZERO)
+    private fun deviceNow(): Instant = Instant.now().plus(clockOffset ?: Duration.ZERO)
 
     private suspend fun execute(endpoint: String, body: String): String = client.execute(endpoint, body, clockOffset)
 
@@ -205,7 +204,7 @@ public class OnvifDevice internal constructor(
             try {
                 val clockOffset = readClockOffset(client, url, logger)
                 val security = credentials?.let {
-                    WsSecurity.usernameToken(it.username, it.password, Clock.System.now().plus(clockOffset ?: Duration.ZERO))
+                    WsSecurity.usernameToken(it.username, it.password, Instant.now().plus(clockOffset ?: Duration.ZERO))
                 }
                 val result = client.execute(url, servicesCommand(security), clockOffset)
                 logger?.debug("Addresses: $result")
@@ -259,7 +258,7 @@ public class OnvifDevice internal constructor(
                     logger?.debug("Device did not report its UTC time; WS-Security timestamps use this host's clock")
                     return null
                 }
-                return (deviceTime - Clock.System.now()).also { logger?.debug("Device clock offset: $it") }
+                return Duration.between(Instant.now(), deviceTime).also { logger?.debug("Device clock offset: $it") }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

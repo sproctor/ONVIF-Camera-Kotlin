@@ -19,7 +19,6 @@ ffmpeg = "8.1.2-1.5.14"
 jetbrains-compose = "1.12.0"
 kotlin = "2.4.20"
 kotlinx-coroutines = "1.11.0"
-kotlinx-datetime = "0.8.0"
 desugar-jdk-libs = "2.1.5"
 ktor = "3.6.0"
 lifecycle-viewmodel-compose = "2.11.0"
@@ -40,7 +39,6 @@ ffmpeg = { module = "org.bytedeco:ffmpeg", version.ref = "ffmpeg" }
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
-kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-datetime" }
 ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
 ktor-client-engine-defaults = { group = "io.ktor", name = "ktor-client-engine-defaults", version.ref = "ktor" }
 ktor-client-auth = { group = "io.ktor", name = "ktor-client-auth", version.ref = "ktor" }

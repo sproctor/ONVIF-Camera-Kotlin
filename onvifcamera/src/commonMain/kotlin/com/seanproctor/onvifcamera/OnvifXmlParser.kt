@@ -6,10 +6,9 @@ import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.serializer
 import nl.adaptivity.xmlutil.EventType
 import nl.adaptivity.xmlutil.util.CompactFragment
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toInstant
-import kotlin.time.Instant
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 private inline fun <reified T : Any> parseSoap(input: String): T {
     val module = SerializersModule {
@@ -167,8 +166,8 @@ internal fun parseOnvifProbeResponse(input: String): List<ProbeMatch> {
 /** The device's UTC time from a `GetSystemDateAndTime` reply, or null if it did not report one. */
 internal fun parseOnvifSystemDateAndTime(input: String): Instant? {
     val utc = parseSoap<GetSystemDateAndTimeResponse>(input).systemDateAndTime?.utcDateTime ?: return null
-    return LocalDateTime(utc.date.year, utc.date.month, utc.date.day, utc.time.hour, utc.time.minute, utc.time.second)
-        .toInstant(TimeZone.UTC)
+    return LocalDateTime.of(utc.date.year, utc.date.month, utc.date.day, utc.time.hour, utc.time.minute, utc.time.second)
+        .toInstant(ZoneOffset.UTC)
 }
 
 internal fun parseOnvifDeviceInformation(input: String): OnvifDeviceInformation {

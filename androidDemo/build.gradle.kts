@@ -41,7 +41,7 @@ android {
         versionCode = 1
         versionName = "1.0"
     }
-    // The library uses kotlinx-datetime, which is java.time underneath; java.time is API 26,
+    // The library uses java.time, which is API 26,
     // and the demo runs on 23.
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
