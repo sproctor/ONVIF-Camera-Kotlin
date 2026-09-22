@@ -8,10 +8,8 @@ import com.seanproctor.onvifcamera.soap.Security
 import com.seanproctor.onvifcamera.soap.UsernameToken
 import java.security.MessageDigest
 import java.security.SecureRandom
-import java.time.Instant
-import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 import kotlin.io.encoding.Base64
+import kotlin.time.Instant
 
 /** Builds the WS-Security header ONVIF devices authenticate with. */
 internal object WsSecurity {
@@ -27,7 +25,9 @@ internal object WsSecurity {
      */
     fun usernameToken(username: String, password: String, deviceTime: Instant): Security {
         val nonce = ByteArray(16).also(random::nextBytes)
-        val created = DateTimeFormatter.ISO_INSTANT.format(deviceTime.truncatedTo(ChronoUnit.SECONDS))
+        // Whole seconds in ISO-8601 UTC, e.g. 2026-09-22T12:00:00Z; kotlin.time.Instant prints
+        // exactly that once the fraction is dropped. (java.time is API 26 on Android; minSdk is 23.)
+        val created = Instant.fromEpochSeconds(deviceTime.epochSeconds).toString()
         val digest = MessageDigest.getInstance("SHA-1").run {
             update(nonce)
             update(created.encodeToByteArray())

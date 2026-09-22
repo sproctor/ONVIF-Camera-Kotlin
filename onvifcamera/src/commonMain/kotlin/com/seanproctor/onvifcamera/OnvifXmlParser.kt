@@ -6,9 +6,7 @@ import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.serializer
 import nl.adaptivity.xmlutil.EventType
 import nl.adaptivity.xmlutil.util.CompactFragment
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneOffset
+import kotlin.time.Instant
 
 private inline fun <reified T : Any> parseSoap(input: String): T {
     val module = SerializersModule {
@@ -166,8 +164,22 @@ internal fun parseOnvifProbeResponse(input: String): List<ProbeMatch> {
 /** The device's UTC time from a `GetSystemDateAndTime` reply, or null if it did not report one. */
 internal fun parseOnvifSystemDateAndTime(input: String): Instant? {
     val utc = parseSoap<GetSystemDateAndTimeResponse>(input).systemDateAndTime?.utcDateTime ?: return null
-    return LocalDateTime.of(utc.date.year, utc.date.month, utc.date.day, utc.time.hour, utc.time.minute, utc.time.second)
-        .toInstant(ZoneOffset.UTC)
+    return utcInstant(utc.date.year, utc.date.month, utc.date.day, utc.time.hour, utc.time.minute, utc.time.second)
+}
+
+/**
+ * A proleptic-Gregorian UTC date and time as an [Instant]. Done by hand because `java.time` is
+ * API 26 on Android and the library supports 23; this is the days-from-civil algorithm, with
+ * March as the first month so the leap day falls at the end of the year.
+ */
+internal fun utcInstant(year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Int): Instant {
+    val y = if (month <= 2) year - 1 else year
+    val era = y.floorDiv(400)
+    val yearOfEra = y - era * 400
+    val dayOfYear = (153 * ((month + 9) % 12) + 2) / 5 + day - 1
+    val dayOfEra = yearOfEra * 365 + yearOfEra / 4 - yearOfEra / 100 + dayOfYear
+    val epochDays = era * 146097L + dayOfEra - 719468
+    return Instant.fromEpochSeconds(epochDays * 86400 + hour * 3600L + minute * 60L + second)
 }
 
 internal fun parseOnvifDeviceInformation(input: String): OnvifDeviceInformation {
