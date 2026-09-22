@@ -11,7 +11,7 @@ kotlin {
     android {
         namespace = "com.seanproctor.onvifcamera.demo"
         minSdk = 23
-        compileSdk = 36
+        compileSdk = 37
         withHostTest { }
     }
     jvm()

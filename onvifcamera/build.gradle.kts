@@ -11,7 +11,7 @@ version = "2.2.1"
 kotlin {
     androidLibrary {
         minSdk = 23
-        compileSdk = 36
+        compileSdk = 37
         namespace = "com.seanproctor.onvifcamera"
         withHostTest { }
     }
@@ -33,7 +33,6 @@ kotlin {
                 implementation(libs.ktor.client.core)
                 implementation(libs.ktor.client.auth)
                 implementation(libs.ktor.client.logging)
-                implementation(libs.ktor.network)
                 implementation(libs.kotlinx.collections.immutable)
             }
         }
