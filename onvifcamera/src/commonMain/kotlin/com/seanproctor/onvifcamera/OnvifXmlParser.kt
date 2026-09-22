@@ -14,8 +14,25 @@ private inline fun <reified T : Any> parseSoap(input: String): T {
 
     val serializer = serializer<Envelope<T>>()
 
-    return SoapXml(module).decodeFromString(serializer, input).data
+    return try {
+        SoapXml(module).decodeFromString(serializer, input).data
+    } catch (e: Exception) {
+        throw notTheExpectedReply(T::class.simpleName, e)
+    }
 }
+
+/**
+ * A 2xx body that does not decode as the reply asked for: an HTML login page from the camera's
+ * web server, a captive portal, a proxy's error page. Decoding is all [parseSoap] does, so any
+ * exception out of it means exactly that, and xmlutil is not consistent about which it throws:
+ * `XmlException` (an `IOException`, which would read as a network failure) for malformed XML,
+ * `SerializationException` for the wrong structure, and a bare `IllegalStateException` from its
+ * parser for a body that is not XML at all. All become [OnvifInvalidResponse], so everything the
+ * library raises about a device is an [OnvifException], as its API documents.
+ */
+private fun notTheExpectedReply(expected: String?, cause: Exception): OnvifInvalidResponse =
+    OnvifInvalidResponse("Response is not a valid $expected: ${cause.message}")
+        .apply { initCause(cause) }
 
 /**
  * The fault in [input], or null if it is not a SOAP fault. Only a well-formed fault counts:
