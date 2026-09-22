@@ -54,7 +54,8 @@ public class OnvifDevice internal constructor(
     }
 
     private fun getEndpointForRequest(requestType: OnvifRequestType): String {
-        val path = namespaceMap[requestType.namespace()] ?: throw OnvifServiceUnavailable()
+        val namespace = requestType.namespace()
+        val path = namespaceMap[namespace] ?: throw OnvifServiceUnavailable(namespace)
         return buildUrl(path)
     }
 
