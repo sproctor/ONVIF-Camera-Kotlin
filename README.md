@@ -11,6 +11,25 @@ implementation("com.seanproctor:onvifcamera:<VERSION>")
 The HTTP engine comes with it (Ktor's `ktor-client-engine-defaults`: OkHttp on the JVM and on
 Android), so there is nothing else to add.
 
+### Android: API 26, or core library desugaring
+
+The library uses `java.time` for the WS-Security timestamps and the camera clock, which Android
+only has from API 26. An app with `minSdk` 26 or higher needs nothing. An app with a lower `minSdk` must enable
+[core library desugaring](https://developer.android.com/studio/write/java8-support#library-desugaring),
+or the first `requestDevice` throws `NoClassDefFoundError` on Android 6.0–7.1:
+
+```kotlin
+android {
+    compileOptions {
+        isCoreLibraryDesugaringEnabled = true
+    }
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+}
+```
+
 ## Discover cameras on the local network
 
 ```kotlin

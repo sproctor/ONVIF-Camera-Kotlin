@@ -164,6 +164,7 @@ internal fun parseOnvifProbeResponse(input: String): List<ProbeMatch> {
 }
 
 /** The device's UTC time from a `GetSystemDateAndTime` reply, or null if it did not report one. */
+@Suppress("NewApi") // java.time is API 26; the README requires minSdk 26 or desugaring
 internal fun parseOnvifSystemDateAndTime(input: String): Instant? {
     val utc = parseSoap<GetSystemDateAndTimeResponse>(input).systemDateAndTime?.utcDateTime ?: return null
     return LocalDateTime.of(utc.date.year, utc.date.month, utc.date.day, utc.time.hour, utc.time.minute, utc.time.second)
