@@ -21,7 +21,7 @@ public data class MediaProfile(
     val height: Int? = null,
 ) {
     public fun canStream(): Boolean =
-            encoding == "MPEG4" || encoding == "H264"
+            encoding == "MPEG4" || encoding == "H264" || encoding == "H265"
 
     public fun canSnapshot(): Boolean =
             encoding == "JPEG"
