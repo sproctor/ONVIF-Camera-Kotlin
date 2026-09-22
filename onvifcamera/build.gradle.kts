@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.seanproctor"
-version = "3.0.0-alpha01"
+version = "3.0.0-alpha02"
 
 kotlin {
     android {
