@@ -48,6 +48,11 @@ val deviceInfo = device.getDeviceInformation()
 
 Leave the credentials out for a camera that does not require them.
 
+The services the camera advertises decide how profiles and URIs are fetched: Media2
+(`ver20/media`) when it offers that, Media1 (`ver10/media`) otherwise. A camera offering
+neither still connects, but `getProfiles`, `getStreamURI` and `getSnapshotURI` throw
+`OnvifServiceUnavailable`.
+
 ## Retrieve the stream and snapshot URIs
 
 ```kotlin
@@ -79,7 +84,7 @@ Every failure the library raises about a device is an `OnvifException`:
 | `OnvifForbidden` | The camera answered 403: credentials right, operation not permitted |
 | `OnvifFault` | The camera rejected the operation with any other SOAP fault; `code`, `subcodes`, `reason` and `detail` say why |
 | `OnvifInvalidResponse` | Any other non-2xx status without a fault |
-| `OnvifServiceUnavailable` | The camera does not offer the service an operation needs; `namespace` says which |
+| `OnvifServiceUnavailable` | The camera does not offer the service an operation needs; `namespace` says which. For the media operations it means neither Media2 nor Media1 is offered |
 
 Network failures surface as the platform's `IOException`.
 

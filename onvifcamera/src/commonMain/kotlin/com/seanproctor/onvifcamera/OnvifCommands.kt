@@ -20,15 +20,33 @@ internal object OnvifCommands {
         return SoapXml(module).encodeToString(serializer<Envelope<T>>(), Envelope(data))
     }
 
-    // Only the video encoder: this library finds cameras and their streams, not audio devices,
-    // and every field MediaProfile exposes comes from that one configuration.
-    internal val profilesCommand: String = encodeSoap(GetProfilesRequest(type = listOf("VideoEncoder")))
+    // Media2 returns tokens and names only unless asked for configurations. Only the video
+    // encoder is asked for: this library finds cameras and their streams, not audio devices, and
+    // every field MediaProfile exposes comes from that one configuration. Media1 has no such
+    // choice and inlines everything.
+    private val profilesMedia2: String = encodeSoap(GetProfilesRequest(type = listOf("VideoEncoder")))
+    private val profilesMedia1: String = encodeSoap(GetProfilesRequest1())
 
-    internal fun getStreamURICommand(profile: MediaProfile, protocol: String = "RTSP"): String =
-        encodeSoap(GetStreamUriRequest(profileToken = profile.token, protocol = protocol))
+    internal fun profilesCommand(media: MediaService): String = when (media) {
+        MediaService.MEDIA2 -> profilesMedia2
+        MediaService.MEDIA1 -> profilesMedia1
+    }
 
-    internal fun getSnapshotURICommand(profile: MediaProfile): String =
-        encodeSoap(GetSnapshotUriRequest(profileToken = profile.token))
+    internal fun getStreamURICommand(media: MediaService, profile: MediaProfile, protocol: String = "RTSP"): String =
+        when (media) {
+            MediaService.MEDIA2 -> encodeSoap(GetStreamUriRequest(profileToken = profile.token, protocol = protocol))
+            MediaService.MEDIA1 -> encodeSoap(
+                GetStreamUriRequest1(
+                    streamSetup = StreamSetup(transport = Transport(protocol = protocol)),
+                    profileToken = profile.token,
+                )
+            )
+        }
+
+    internal fun getSnapshotURICommand(media: MediaService, profile: MediaProfile): String = when (media) {
+        MediaService.MEDIA2 -> encodeSoap(GetSnapshotUriRequest(profileToken = profile.token))
+        MediaService.MEDIA1 -> encodeSoap(GetSnapshotUriRequest1(profileToken = profile.token))
+    }
 
     internal val deviceInformationCommand: String = encodeSoap(GetDeviceInformationRequest())
 

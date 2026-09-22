@@ -86,6 +86,12 @@ private fun detailText(fragment: CompactFragment): String? {
 
 private val WHITESPACE = Regex("\\s+")
 
+internal fun parseOnvifProfiles(media: MediaService, input: String): List<MediaProfile> = when (media) {
+    MediaService.MEDIA2 -> parseOnvifProfiles(input)
+    MediaService.MEDIA1 -> parseOnvifProfilesMedia1(input)
+}
+
+/** Media2: the encoder is the `VideoEncoder` child of `Configurations`. */
 internal fun parseOnvifProfiles(input: String): List<MediaProfile> {
     val result = parseSoap<GetProfilesResponse>(input)
 
@@ -101,15 +107,46 @@ internal fun parseOnvifProfiles(input: String): List<MediaProfile> {
     }
 }
 
+/** Media1: the encoder is inlined in the profile as `VideoEncoderConfiguration`. */
+internal fun parseOnvifProfilesMedia1(input: String): List<MediaProfile> {
+    val result = parseSoap<GetProfilesResponse1>(input)
+
+    return result.profiles.map {
+        MediaProfile(
+            token = it.token,
+            name = it.name,
+            encoding = it.encoder?.encoding,
+            width = it.encoder?.resolution?.width,
+            height = it.encoder?.resolution?.height,
+        )
+    }
+}
+
+internal fun parseOnvifStreamUri(media: MediaService, input: String): String = when (media) {
+    MediaService.MEDIA2 -> parseOnvifStreamUri(input)
+    MediaService.MEDIA1 -> parseOnvifStreamUriMedia1(input)
+}
+
 internal fun parseOnvifStreamUri(input: String): String {
     val result = parseSoap<GetStreamUriResponse>(input)
     return result.uri
+}
+
+internal fun parseOnvifStreamUriMedia1(input: String): String =
+    parseSoap<GetStreamUriResponse1>(input).mediaUri.uri
+
+internal fun parseOnvifSnapshotUri(media: MediaService, input: String): String = when (media) {
+    MediaService.MEDIA2 -> parseOnvifSnapshotUri(input)
+    MediaService.MEDIA1 -> parseOnvifSnapshotUriMedia1(input)
 }
 
 internal fun parseOnvifSnapshotUri(input: String): String {
     val result = parseSoap<GetSnapshotUriResponse>(input)
     return result.uri
 }
+
+internal fun parseOnvifSnapshotUriMedia1(input: String): String =
+    parseSoap<GetSnapshotUriResponse1>(input).mediaUri.uri
 
 internal fun parseOnvifServices(input: String): List<OnvifService> {
     return parseSoap<GetServicesResponse>(input).services

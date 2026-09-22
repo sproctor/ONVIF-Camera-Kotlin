@@ -57,10 +57,16 @@ public class OnvifFault(
 
 /**
  * The device's `GetServices` reply did not advertise the service an operation lives under, so
- * there is no endpoint to send it to.
+ * there is no endpoint to send it to. For the media operations this means the device offers
+ * neither Media2 nor Media1; the library falls back to Media1 by itself, so there is nothing
+ * for the caller to retry.
  *
  * @property namespace the WSDL namespace of the missing service, such as
- *   `http://www.onvif.org/ver20/media/wsdl`
+ *   `http://www.onvif.org/ver20/media/wsdl`; for the media operations, the preferred one
  */
-public class OnvifServiceUnavailable(public val namespace: String) :
-    OnvifException("Device does not offer the service $namespace")
+public class OnvifServiceUnavailable internal constructor(
+    public val namespace: String,
+    message: String,
+) : OnvifException(message) {
+    public constructor(namespace: String) : this(namespace, "Device does not offer the service $namespace")
+}

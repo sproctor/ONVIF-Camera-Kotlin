@@ -1,6 +1,7 @@
 package com.seanproctor.onvifcamera.encoders
 
 import com.seanproctor.onvifcamera.MediaProfile
+import com.seanproctor.onvifcamera.MediaService
 import com.seanproctor.onvifcamera.OnvifCommands
 import nl.adaptivity.xmlutil.EventType
 import nl.adaptivity.xmlutil.xmlStreaming
@@ -74,7 +75,7 @@ class OnvifCommandsTest {
 
     @Test
     fun testStreamUriCommandUsesProfileTokenAndDefaultProtocol() {
-        val command = OnvifCommands.getStreamURICommand(profile)
+        val command = OnvifCommands.getStreamURICommand(MediaService.MEDIA2, profile)
         assertWellFormed(command)
         assertEquals(MEDIA20_NS, namespaceOf(command, "GetStreamUri"))
         assertEquals("Profile_1", readElementText(command, "ProfileToken"))
@@ -82,15 +83,41 @@ class OnvifCommandsTest {
     }
 
     @Test
+    fun testMedia1StreamUriCommandSpellsOutTheTransport() {
+        val command = OnvifCommands.getStreamURICommand(MediaService.MEDIA1, profile)
+        assertWellFormed(command)
+        assertEquals(MEDIA10_NS, namespaceOf(command, "GetStreamUri"))
+        assertEquals(MEDIA10_NS, namespaceOf(command, "StreamSetup"))
+        assertEquals("RTP-Unicast", readElementText(command, "Stream"))
+        assertEquals("RTSP", readElementText(command, "Protocol"))
+        assertEquals("Profile_1", readElementText(command, "ProfileToken"))
+        // The schema orders StreamSetup before ProfileToken; gSOAP devices reject the reverse.
+        assertTrue(command.indexOf("StreamSetup") < command.indexOf("ProfileToken"), command)
+    }
+
+    @Test
+    fun testMedia1ProfilesAndSnapshotCommands() {
+        val profiles = OnvifCommands.profilesCommand(MediaService.MEDIA1)
+        assertWellFormed(profiles)
+        assertEquals(MEDIA10_NS, namespaceOf(profiles, "GetProfiles"))
+        assertFalse(hasElement(profiles, "Type"), "Media1 GetProfiles takes no Type: $profiles")
+
+        val snapshot = OnvifCommands.getSnapshotURICommand(MediaService.MEDIA1, profile)
+        assertWellFormed(snapshot)
+        assertEquals(MEDIA10_NS, namespaceOf(snapshot, "GetSnapshotUri"))
+        assertEquals("Profile_1", readElementText(snapshot, "ProfileToken"))
+    }
+
+    @Test
     fun testStreamUriCommandUsesSuppliedProtocol() {
-        val command = OnvifCommands.getStreamURICommand(profile, protocol = "HTTP")
+        val command = OnvifCommands.getStreamURICommand(MediaService.MEDIA2, profile, protocol = "HTTP")
         assertWellFormed(command)
         assertEquals("HTTP", readElementText(command, "Protocol"))
     }
 
     @Test
     fun testSnapshotUriCommandUsesProfileTokenWithoutProtocol() {
-        val command = OnvifCommands.getSnapshotURICommand(profile)
+        val command = OnvifCommands.getSnapshotURICommand(MediaService.MEDIA2, profile)
         assertWellFormed(command)
         assertEquals(MEDIA20_NS, namespaceOf(command, "GetSnapshotUri"))
         assertEquals("Profile_1", readElementText(command, "ProfileToken"))
@@ -99,7 +126,7 @@ class OnvifCommandsTest {
 
     @Test
     fun testProfilesCommand() {
-        val command = OnvifCommands.profilesCommand
+        val command = OnvifCommands.profilesCommand(MediaService.MEDIA2)
         assertWellFormed(command)
         assertEquals(MEDIA20_NS, namespaceOf(command, "GetProfiles"))
         // Media2 returns tokens and names only unless asked for configurations; the video
@@ -143,6 +170,7 @@ class OnvifCommandsTest {
         // round-trip back to its original value once the document is parsed.
         val nastyToken = "tok&<>\"'en"
         val command = OnvifCommands.getStreamURICommand(
+            MediaService.MEDIA2,
             MediaProfile(token = nastyToken, name = null, encoding = "H264"),
         )
         assertWellFormed(command)
