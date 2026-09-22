@@ -4,6 +4,8 @@ import com.seanproctor.onvifcamera.soap.*
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.serializer
+import nl.adaptivity.xmlutil.EventType
+import nl.adaptivity.xmlutil.util.CompactFragment
 
 private inline fun <reified T : Any> parseSoap(input: String): T {
     val module = SerializersModule {
@@ -54,12 +56,38 @@ internal fun parseOnvifFault(input: String): OnvifFault? {
         code = fault.code?.value?.localName(),
         subcodes = subcodes,
         reason = fault.reason?.text?.firstOrNull()?.value?.trim()?.ifEmpty { null },
-        detail = fault.detail?.text?.trim()?.ifEmpty { null },
+        detail = fault.detail?.content?.let(::detailText),
     )
 }
 
 /** `ter:NoProfile` -> `NoProfile`. Fault codes are QNames; the prefix is the device's choice. */
 private fun String.localName(): String = trim().substringAfterLast(':')
+
+/**
+ * The text of a fault's `Detail`, whatever elements the device wrapped it in: SOAP 1.2 leaves
+ * that to the application, so gSOAP's `<S:Text>` and a vendor's `<ter:Error>` tree both reduce
+ * to their text nodes, entities decoded and whitespace collapsed. Null when there is none.
+ */
+private fun detailText(fragment: CompactFragment): String? {
+    val reader = fragment.getXmlReader()
+    val text = try {
+        buildString {
+            while (reader.hasNext()) {
+                when (reader.next()) {
+                    EventType.TEXT, EventType.CDSECT -> append(reader.text)
+                    // Indentation between elements is reported as ignorable and dropped, so
+                    // an element boundary separates the runs of text; collapsed below.
+                    else -> append(' ')
+                }
+            }
+        }
+    } finally {
+        reader.close()
+    }
+    return text.replace(WHITESPACE, " ").trim().ifEmpty { null }
+}
+
+private val WHITESPACE = Regex("\\s+")
 
 internal fun parseOnvifProfiles(input: String): List<MediaProfile> {
     val result = parseSoap<GetProfilesResponse>(input)

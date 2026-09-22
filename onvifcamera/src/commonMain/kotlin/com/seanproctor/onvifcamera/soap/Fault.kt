@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 import nl.adaptivity.xmlutil.serialization.XmlElement
 import nl.adaptivity.xmlutil.serialization.XmlSerialName
 import nl.adaptivity.xmlutil.serialization.XmlValue
+import nl.adaptivity.xmlutil.util.CompactFragment
 
 private const val SOAP_NS = "http://www.w3.org/2003/05/soap-envelope"
 private const val XML_NS = "http://www.w3.org/XML/1998/namespace"
@@ -56,10 +57,14 @@ internal class FaultText(
     val value: String = "",
 )
 
+/**
+ * SOAP 1.2 leaves the contents of `Detail` to the application: gSOAP writes a `Text` element,
+ * other stacks write their own, such as `ter:Error` with children. The whole fragment is kept
+ * and reduced to its text when the fault is reported, so the message reads the same either way.
+ */
 @Serializable
 @XmlSerialName("Detail", SOAP_NS, "S")
 internal class FaultDetail(
-    @XmlElement(true)
-    @XmlSerialName("Text", SOAP_NS, "S")
-    val text: String? = null,
+    @XmlValue(true)
+    val content: CompactFragment = CompactFragment(""),
 )

@@ -37,7 +37,8 @@ public class OnvifInvalidResponse(message: String) : OnvifException(message)
  * @property subcodes the fault subcodes, outermost first, such as `["InvalidArgVal", "NoProfile"]`;
  *   empty if the device gave none
  * @property reason the device's human-readable reason, in the first language it offered
- * @property detail the fault's detail text, which gSOAP-based devices fill in
+ * @property detail the text of the fault's `Detail`, whatever elements the device wrapped it in
+ *   (gSOAP writes a `Text`, other stacks their own), or null if there is none
  */
 public class OnvifFault(
     public val code: String?,
