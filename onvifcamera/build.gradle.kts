@@ -42,6 +42,9 @@ kotlin {
                 implementation(libs.ktor.client.core)
                 implementation(libs.ktor.client.auth)
                 implementation(libs.ktor.client.logging)
+                // A curated engine per platform (OkHttp on the JVM and Android), so consumers
+                // need no engine dependency of their own. Ships as a runtime dependency.
+                implementation(libs.ktor.client.engine.defaults)
             }
         }
 
@@ -49,14 +52,6 @@ kotlin {
             dependencies {
                 implementation(kotlin("test"))
                 implementation(libs.kotlinx.coroutines.test)
-            }
-        }
-
-        jvmTest {
-            dependencies {
-                // The library ships only ktor-client-core; the app supplies the engine. The
-                // conformance suite talks real HTTP to its fake device, so it needs one here.
-                implementation(libs.ktor.client.cio)
             }
         }
     }
