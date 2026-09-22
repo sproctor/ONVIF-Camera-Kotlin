@@ -181,19 +181,30 @@ public class OnvifDevice internal constructor(
                     contentType(soapContentType)
                     setBody(body)
                 }
+                val body = response.bodyAsText()
+                // A fault can arrive with any status: the spec wants 400 or 500, some cameras
+                // send 200. So every body is checked, and a fault outranks the status.
+                val fault = parseOnvifFault(body)
+                if (fault != null) throw fault.toException()
                 if (response.status.value in 200..299) {
-                    return response.bodyAsText()
-                } else {
-                    throw when (response.status.value) {
-                        401 -> OnvifUnauthorized("Unauthorized")
-                        403 -> OnvifForbidden("Forbidden")
-                        else -> OnvifInvalidResponse("Invalid response from device: ${response.status}")
-                    }
+                    return body
+                }
+                throw when (response.status.value) {
+                    401 -> OnvifUnauthorized("Unauthorized")
+                    403 -> OnvifForbidden("Forbidden")
+                    else -> OnvifInvalidResponse("Invalid response from device: ${response.status}")
                 }
             }
         }
     }
 }
+
+/**
+ * A `NotAuthorized` fault is a device saying the credentials are wrong in SOAP rather than in
+ * HTTP, so it maps to the same exception a 401 does. Every other fault is reported as itself.
+ */
+private fun OnvifFault.toException(): OnvifException =
+    if ("NotAuthorized" in subcodes) OnvifUnauthorized(message ?: "Not authorized") else this
 
 private val soapContentType: ContentType =
     ContentType(

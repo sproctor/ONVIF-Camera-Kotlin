@@ -68,8 +68,10 @@ XML strings and parses responses with kotlinx-serialization XML.
 3. **`OnvifCommands`** holds the hand-written SOAP request bodies (constants and builder functions).
 4. **`OnvifDevice.execute()`** (companion) is the single HTTP chokepoint. It spins up a fresh Ktor
    `HttpClient` per call, installs Basic + Digest auth when credentials are present, posts the SOAP
-   body, and maps non-2xx statuses to typed exceptions (`OnvifUnauthorized`, `OnvifForbidden`,
-   `OnvifInvalidResponse`), all subclasses of the sealed `OnvifException` in `Exceptions.kt`.
+   body, checks every response body for a SOAP fault (`parseOnvifFault`; cameras send faults with
+   200 as well as 400/500) and throws it as `OnvifFault`, then maps remaining non-2xx statuses to
+   `OnvifUnauthorized`, `OnvifForbidden` or `OnvifInvalidResponse`. All are subclasses of the
+   sealed `OnvifException` in `Exceptions.kt`; a `NotAuthorized` fault becomes `OnvifUnauthorized`.
 5. **`OnvifXmlParser`** parses responses. Every response is an `Envelope<T>` (see `soap/Envelope.kt`)
    wrapping a typed body; `parseSoap<T>()` is the generic decoder. The `soap/` package holds the
    `@Serializable` data classes for each response type. The parser is lenient

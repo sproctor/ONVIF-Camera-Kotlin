@@ -53,10 +53,10 @@ val profile = profiles.first { it.encoding != null }
 val streamUri = device.getStreamURI(profile)
 
 // Snapshots are JPEG whatever the profile's codec. Whether the camera offers one at all is
-// the camera's answer: a device without snapshot support replies with a fault.
+// the camera's answer: a device without snapshot support replies with a SOAP fault.
 val snapshotUri = try {
     device.getSnapshotURI(profile)
-} catch (e: OnvifException) {
+} catch (e: OnvifFault) {
     null
 }
 ```
@@ -69,7 +69,8 @@ Every failure the library raises about a device is an `OnvifException`:
 |---|---|
 | `OnvifUnauthorized` | The camera answered 401: credentials missing or wrong |
 | `OnvifForbidden` | The camera answered 403: credentials right, operation not permitted |
-| `OnvifInvalidResponse` | Any other non-2xx status |
+| `OnvifFault` | The camera rejected the operation with a SOAP fault; `code`, `subcodes` and `reason` say why |
+| `OnvifInvalidResponse` | Any other non-2xx status without a fault |
 | `OnvifServiceUnavailable` | The camera does not offer the service an operation needs; `namespace` says which |
 
 Network failures surface as the platform's `IOException`.

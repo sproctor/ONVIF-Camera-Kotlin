@@ -17,6 +17,33 @@ private inline fun <reified T : Any> parseSoap(input: String): T {
     return SoapXml(module).decodeFromString(serializer, input).data
 }
 
+/**
+ * The fault in [input], or null if it is not a SOAP fault. Only a well-formed fault counts:
+ * anything that fails to decode as one is treated as not a fault, so the caller falls back
+ * to judging the response by its HTTP status.
+ */
+internal fun parseOnvifFault(input: String): OnvifFault? {
+    // Cheap pre-check so the common path does not attempt a decode that is bound to fail.
+    if (!input.contains("Fault")) return null
+    val fault = try {
+        parseSoap<Fault>(input)
+    } catch (_: Exception) {
+        return null
+    }
+    val subcodes = generateSequence(fault.code?.subcode) { it.subcode }
+        .map { it.value.localName() }
+        .toList()
+    return OnvifFault(
+        code = fault.code?.value?.localName(),
+        subcodes = subcodes,
+        reason = fault.reason?.text?.firstOrNull()?.value?.trim()?.ifEmpty { null },
+        detail = fault.detail?.text?.trim()?.ifEmpty { null },
+    )
+}
+
+/** `ter:NoProfile` -> `NoProfile`. Fault codes are QNames; the prefix is the device's choice. */
+private fun String.localName(): String = trim().substringAfterLast(':')
+
 internal fun parseOnvifProfiles(input: String): List<MediaProfile> {
     val result = parseSoap<GetProfilesResponse>(input)
 
