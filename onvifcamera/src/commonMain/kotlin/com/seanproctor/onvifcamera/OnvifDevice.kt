@@ -77,10 +77,18 @@ public class OnvifDevice internal constructor(
     }
 
     public companion object {
+        /**
+         * Connects to the device at [url], asks it which services it offers and returns a handle
+         * for later requests. Credentials are optional; leave both null for a device that does
+         * not require authentication.
+         *
+         * @throws OnvifException if the device rejects the request or answers with something
+         *   that is not a services list
+         */
         public suspend fun requestDevice(
             url: String,
-            username: String?,
-            password: String?,
+            username: String? = null,
+            password: String? = null,
             logger: OnvifLogger? = null,
         ): OnvifDevice {
             val result = execute(
