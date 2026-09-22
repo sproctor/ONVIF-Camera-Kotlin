@@ -31,14 +31,14 @@ internal abstract class BaseSocketListener(
         InetAddress.getByName(MULTICAST_ADDRESS)
     }
 
-    override fun listenForPackets(retryCount: Int): Flow<DatagramPacket> = flow {
+    override fun listenForPackets(): Flow<DatagramPacket> = flow {
         val socket = openSocket()
         try {
             coroutineScope {
                 // Probes are spaced out (see sendProbes), so they go from a child coroutine
                 // while this one receives; replies to the first probe are not held up by the
                 // schedule. A send failure cancels the scope and fails the flow.
-                launch { sendProbes(socket, retryCount) }
+                launch { sendProbes(socket) }
 
                 // receive() blocks and cancellation cannot interrupt it, so the socket has a
                 // read timeout: the loop re-checks isActive at least every RECEIVE_TIMEOUT_MS,
@@ -98,13 +98,14 @@ internal abstract class BaseSocketListener(
     }
 
     /**
-     * Sends the probe, then retransmits it [retryCount] times on the SOAP-over-UDP schedule: a
-     * random 50–250 ms gap that doubles per repeat and caps at 500 ms. Every repeat is the same
-     * message; cameras dedupe on MessageID, so a repeat only matters when the original was lost,
-     * and one sent back-to-back would be lost to the same burst. The jitter keeps several
+     * Sends the probe on the SOAP-over-UDP 1.1 multicast schedule: MULTICAST_UDP_REPEAT
+     * retransmissions after the first send, spaced by a random 50–250 ms gap that doubles per
+     * repeat and caps at 500 ms. Every repeat is the same message, MessageID included, which is
+     * what lets a receiver discard the duplicates; a repeat only matters when the original was
+     * lost, and one sent back-to-back would be lost to the same burst. The jitter keeps several
      * clients on one network from retransmitting in lockstep.
      */
-    private suspend fun sendProbes(socket: MulticastSocket, retryCount: Int) {
+    private suspend fun sendProbes(socket: MulticastSocket) {
         val request = OnvifCommands.probeCommand(UUID.randomUUID().toString()).encodeToByteArray()
         val datagram = DatagramPacket(request, request.size, multicastAddress, MULTICAST_PORT)
 
@@ -112,7 +113,7 @@ internal abstract class BaseSocketListener(
         // and VM bridges, VPNs), so probe on every interface that can multicast.
         val interfaces = multicastInterfaces()
         var gapMs = Random.nextLong(UDP_MIN_DELAY_MS, UDP_MAX_DELAY_MS + 1)
-        repeat(1 + retryCount) { attempt ->
+        repeat(1 + MULTICAST_UDP_REPEAT) { attempt ->
             if (attempt > 0) {
                 delay(gapMs)
                 gapMs = (gapMs * 2).coerceAtMost(UDP_UPPER_DELAY_MS)
@@ -153,6 +154,7 @@ internal abstract class BaseSocketListener(
         const val RECEIVE_TIMEOUT_MS = 500
 
         // SOAP-over-UDP 1.1 retransmission constants.
+        const val MULTICAST_UDP_REPEAT = 2
         const val UDP_MIN_DELAY_MS = 50L
         const val UDP_MAX_DELAY_MS = 250L
         const val UDP_UPPER_DELAY_MS = 500L

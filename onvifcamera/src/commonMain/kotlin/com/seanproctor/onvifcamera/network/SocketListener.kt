@@ -7,11 +7,10 @@ import java.net.DatagramPacket
 internal interface SocketListener {
 
     /**
-     * A cold flow. Collecting it opens a socket, sends `1 + retryCount` probes and emits every
-     * datagram received until the collector is cancelled, then closes the socket. Blocking
-     * socket work runs on [kotlinx.coroutines.Dispatchers.IO]. Socket failures fail the flow.
-     *
-     * @param retryCount how many additional probes to send after the first
+     * A cold flow. Collecting it opens a socket, sends the probe on the SOAP-over-UDP
+     * retransmission schedule and emits every datagram received until the collector is
+     * cancelled, then closes the socket. Blocking socket work runs on
+     * [kotlinx.coroutines.Dispatchers.IO]. Socket failures fail the flow.
      */
-    fun listenForPackets(retryCount: Int): Flow<DatagramPacket>
+    fun listenForPackets(): Flow<DatagramPacket>
 }

@@ -74,11 +74,13 @@ import `java.net.*` directly, which is why iOS isn't supported yet.
 - `SocketListener` / `BaseSocketListener` do the multicast work (group `239.255.255.250:3702`).
   The Android vs JVM subclasses differ only in `acquireMulticastLock`/`releaseMulticastLock`
   (`AndroidSocketListener` holds a WifiManager `MulticastLock`; the JVM one is a no-op).
-- `discoverDevices(retryCount)` returns a **cold** `Flow<List<DiscoveredOnvifDevice>>`: collecting
+- `discoverDevices()` returns a **cold** `Flow<List<DiscoveredOnvifDevice>>`: collecting
   it opens the socket, probes, and listens until the collector is cancelled, which closes the socket
-  (a read timeout bounds that). It is a `runningFold` over an immutable map keyed by source
-  `InetAddress` — dedupes by address, keeps discovery order, `distinctUntilChanged` conflates
-  identical retry replies. Socket I/O and parsing run on `Dispatchers.IO`. Socket errors fail the
+  (a read timeout bounds that). The probe is retransmitted on the SOAP-over-UDP 1.1 multicast
+  schedule (3 sends, random 50-250 ms gap doubling to a 500 ms cap); there is no knob for it.
+  It is a `runningFold` over an immutable map keyed by source `InetAddress` — dedupes by
+  address, keeps discovery order, `distinctUntilChanged` conflates identical retransmission
+  replies. Socket I/O and parsing run on `Dispatchers.IO`. Socket errors fail the
   flow; unparseable replies are logged and dropped. `OnvifDiscoveryManagerImplTest` drives the
   pipeline with a scripted `SocketListener`.
 

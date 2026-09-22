@@ -18,10 +18,8 @@ internal class OnvifDiscoveryManagerImpl(
     private val socketListener: SocketListener,
     private val logger: OnvifLogger?,
 ) : OnvifDiscoveryManager {
-    override fun discoverDevices(retryCount: Int): Flow<List<DiscoveredOnvifDevice>> {
-        require(retryCount >= 0) { "Retry count cannot be negative" }
-
-        return socketListener.listenForPackets(retryCount)
+    override fun discoverDevices(): Flow<List<DiscoveredOnvifDevice>> =
+        socketListener.listenForPackets()
             .mapNotNull { packet -> parseProbeMatch(packet) }
             // Parsing joins the socket work on IO. This also puts a channel between the receive
             // loop and the parser, so a slow parse cannot stall receive() and let the kernel
@@ -29,8 +27,8 @@ internal class OnvifDiscoveryManagerImpl(
             .flowOn(Dispatchers.IO)
             // The accumulator is an immutable map, so every emission is a stable snapshot. The
             // LinkedHashMap copy keeps discovery order and leaves a camera that answers again
-            // in its original position. A camera answering a retry identically yields an equal
-            // map, which distinctUntilChanged drops.
+            // in its original position. A camera answering a retransmission identically yields
+            // an equal map, which distinctUntilChanged drops.
             .runningFold(emptyMap<InetAddress, DiscoveredOnvifDevice>()) { devices, (address, device) ->
                 devices + (address to device)
             }
@@ -40,7 +38,6 @@ internal class OnvifDiscoveryManagerImpl(
                 logger?.error("Discovery failed", cause)
                 throw cause
             }
-    }
 
     /** The device a probe match describes, keyed by its sender, or null if this is not one. */
     private fun parseProbeMatch(packet: DatagramPacket): Pair<InetAddress, DiscoveredOnvifDevice>? {

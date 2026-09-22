@@ -43,7 +43,7 @@ class MainViewModel(
 
     private val cachedCameras = mutableMapOf<String, CameraInformation>()
     fun discoverDevices(): Flow<List<CameraInformation>> =
-        onvifDiscoveryManager.discoverDevices(2)
+        onvifDiscoveryManager.discoverDevices()
             .map { onvifDevices ->
                 onvifDevices.mapNotNull { onvifDevice ->
                     // TODO: make this an async call

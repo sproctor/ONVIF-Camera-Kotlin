@@ -31,7 +31,7 @@ class OnvifDiscoveryManagerImplTest {
 
     private fun manager(packets: Flow<DatagramPacket>) = OnvifDiscoveryManagerImpl(
         socketListener = object : SocketListener {
-            override fun listenForPackets(retryCount: Int) = packets
+            override fun listenForPackets() = packets
         },
         logger = null,
     )
@@ -49,12 +49,12 @@ class OnvifDiscoveryManagerImplTest {
     }
 
     @Test
-    fun identicalRepliesToRetriesAreConflated() = runTest {
+    fun identicalRepliesToRetransmissionsAreConflated() = runTest {
         val states = manager(
             packet(axisReply, "192.168.0.209"),
             packet(axisReply, "192.168.0.209"),
             packet(axisReply, "192.168.0.209"),
-        ).discoverDevices(retryCount = 2).toList()
+        ).discoverDevices().toList()
 
         assertEquals(listOf(0, 1), states.map { it.size })
     }
@@ -85,13 +85,6 @@ class OnvifDiscoveryManagerImplTest {
 
         assertFailsWith<IOException> {
             manager(failing).discoverDevices().toList()
-        }
-    }
-
-    @Test
-    fun negativeRetryCountIsRejectedBeforeCollection() {
-        assertFailsWith<IllegalArgumentException> {
-            manager().discoverDevices(retryCount = -1)
         }
     }
 }
