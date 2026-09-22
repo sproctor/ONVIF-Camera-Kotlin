@@ -6,7 +6,11 @@ Install with Gradle (must have mavenCentral in repositories):
 
 ```kotlin
 implementation("com.seanproctor:onvifcamera:<VERSION>")
+implementation("io.ktor:ktor-client-cio:<KTOR_VERSION>")   // or any other Ktor client engine
 ```
+
+The library depends on `ktor-client-core` only; your app chooses the engine. Without one, the first
+request fails with "Failed to find HTTP client engine implementation".
 
 ## Discover cameras on the local network
 

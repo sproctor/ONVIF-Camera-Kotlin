@@ -25,6 +25,7 @@ The repo has two Gradle modules:
 ./gradlew :demo:run                      # run the desktop demo app
 ./gradlew :demo:installDebug             # install the Android demo on a connected device
 ./gradlew :onvifcamera:updateLegacyAbi   # regenerate onvifcamera/api/*/onvifcamera.api after a public API change
+./gradlew :onvifcamera:conformanceTest   # ONVIF client conformance suite; NOT run by build, run it after large changes
 ```
 
 Kotlin's built-in ABI validation (`abiValidation()` in `onvifcamera/build.gradle.kts`) checks the

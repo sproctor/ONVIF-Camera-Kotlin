@@ -192,11 +192,10 @@ public class OnvifDevice internal constructor(
             HttpClient {
                 if (username != null && password != null) {
                     install(Auth) {
-                        basic {
-                            credentials {
-                                BasicAuthCredentials(username = username, password = password)
-                            }
-                        }
+                        // Digest is what ONVIF devices challenge with. Basic is answered only
+                        // when a device actually offers it; see ChallengedBasicAuthProvider for
+                        // why Ktor's own Basic provider would leak the password otherwise.
+                        providers += ChallengedBasicAuthProvider(username, password)
                         digest {
                             credentials {
                                 DigestAuthCredentials(username = username, password = password)

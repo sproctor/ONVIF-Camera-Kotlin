@@ -51,9 +51,46 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.test)
             }
         }
+
+        jvmTest {
+            dependencies {
+                // The library ships only ktor-client-core; the app supplies the engine. The
+                // conformance suite talks real HTTP to its fake device, so it needs one here.
+                implementation(libs.ktor.client.cio)
+            }
+        }
     }
 
     jvmToolchain(17)
+}
+
+// Client conformance suite (onvifcamera/src/jvmTest/.../conformance): the library end to end
+// against a fake ONVIF device that checks every request against the specification, plus the
+// same checks against a real camera when ONVIF_CONFORMANCE_URL is set. Deliberately not part of
+// check: run it on demand, and again after any large change.
+//   ./gradlew :onvifcamera:conformanceTest
+val jvmTest = tasks.named<Test>("jvmTest") {
+    filter { excludeTestsMatching("com.seanproctor.onvifcamera.conformance.*") }
+}
+tasks.register<Test>("conformanceTest") {
+    group = "verification"
+    description = "Runs the ONVIF client conformance suite (not part of check)."
+    dependsOn("jvmTestClasses")
+    testClassesDirs = jvmTest.get().testClassesDirs
+    classpath = jvmTest.get().classpath
+    filter { includeTestsMatching("com.seanproctor.onvifcamera.conformance.*") }
+    listOf(
+        "ONVIF_CONFORMANCE_URL",
+        "ONVIF_CONFORMANCE_USERNAME",
+        "ONVIF_CONFORMANCE_PASSWORD",
+        "ONVIF_CONFORMANCE_DISCOVERY",
+    ).forEach { name -> providers.environmentVariable(name).orNull?.let { environment(name, it) } }
+    outputs.upToDateWhen { false }
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
 }
 
 configure<com.vanniktech.maven.publish.MavenPublishBaseExtension> {
