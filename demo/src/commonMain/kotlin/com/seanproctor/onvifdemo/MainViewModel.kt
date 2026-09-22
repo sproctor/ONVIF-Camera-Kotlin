@@ -86,6 +86,11 @@ class MainViewModel(
         val password = password.trim()
 
         if (address.isNotEmpty()) {
+            // Whatever the previous camera offered must not survive into this connection: a
+            // lookup that fails or is skipped below would otherwise leave the old URI in place,
+            // and getSnapshot() would fetch from the old camera with the new credentials.
+            streamUri = null
+            snapshotUri = null
             viewModelScope.launch(Dispatchers.IO) {
                 try {
                     // Get camera services
