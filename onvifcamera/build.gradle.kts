@@ -3,7 +3,6 @@ plugins {
     alias(libs.plugins.android.kotlin.multiplatform.library)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.vanniktech.maven.publish.base)
-    alias(libs.plugins.binary.compatibility.validator)
 }
 
 group = "com.seanproctor"
@@ -22,6 +21,14 @@ kotlin {
 //    iosSimulatorArm64()
 
     explicitApi()
+
+    // Kotlin's built-in ABI validation rather than the binary-compatibility-validator plugin:
+    // under AGP 9 the plugin never registers tasks for the Android target
+    // (Kotlin/binary-compatibility-validator#312), so it could not cover the androidMain
+    // factory. Dumps live in api/<target>/; checkKotlinAbi runs as part of check, and
+    // updateLegacyAbi regenerates the dumps after a public API change.
+    @OptIn(org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation::class)
+    abiValidation()
 
     sourceSets {
         commonMain {

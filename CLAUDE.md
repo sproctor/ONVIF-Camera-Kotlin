@@ -24,12 +24,14 @@ The repo has two Gradle modules:
 ./gradlew :onvifcamera:jvmTest --tests "com.seanproctor.onvifcamera.parsers.ParserTest"   # single test class
 ./gradlew :demo:run                      # run the desktop demo app
 ./gradlew :demo:installDebug             # install the Android demo on a connected device
-./gradlew :onvifcamera:apiDump           # regenerate onvifcamera/api/*.api after a public API change
+./gradlew :onvifcamera:updateLegacyAbi   # regenerate onvifcamera/api/*/onvifcamera.api after a public API change
 ```
 
-The binary-compatibility-validator plugin checks the library's public API against the dumps in
-`onvifcamera/api/` as part of `build`. Any change to a public signature fails the build until
-`apiDump` is run and the updated `.api` files are committed; review that diff as the API change.
+Kotlin's built-in ABI validation (`abiValidation()` in `onvifcamera/build.gradle.kts`) checks the
+library's public API against the dumps in `onvifcamera/api/jvm/` and `onvifcamera/api/android/`
+as part of `build` (`checkKotlinAbi`). Any change to a public signature fails the build until
+`updateLegacyAbi` is run and the updated `.api` files are committed; review that diff as the API
+change. The Android dump is the one that covers the `OnvifDiscoveryManager(Context, …)` factory.
 
 CI (`.github/workflows/build.yml`) runs `./gradlew build` and publishes to Maven Central only on
 GitHub release creation. There is no separate lint step beyond what `build` runs.

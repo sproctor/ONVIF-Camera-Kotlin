@@ -9,13 +9,11 @@ vanniktech-maven-publish-base = { id = "com.vanniktech.maven.publish.base", vers
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
-binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binary-compatibility-validator" }
 
 [versions]
 
 agp = "9.1.1"
 androidx-activity = "1.13.0"
-binary-compatibility-validator = "0.18.0"
 compose-material3 = "1.9.0"
 ffmpeg = "8.1.2-1.5.14"
 jetbrains-compose = "1.12.0"
