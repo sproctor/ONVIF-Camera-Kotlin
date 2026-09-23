@@ -327,6 +327,10 @@ private suspend fun HttpClient.sendAuthenticated(
     val basic = "Basic " + Base64.Default.encode("${credentials.username}:${credentials.password}".encodeToByteArray())
     return request {
         block()
+        // Keep the Auth plugin off this retry: if the device answers it with a Digest challenge,
+        // the plugin would copy this request, Basic header included, and add Digest beside it,
+        // sending the password in clear text again. The 401 is returned instead.
+        attributes.put(AuthCircuitBreaker, Unit)
         headers[HttpHeaders.Authorization] = basic
     }
 }

@@ -151,6 +151,18 @@ class ClientConformanceTest {
     }
 
     @Test
+    fun `SECURITY - a Basic retry answered with a Digest challenge is not retried with Basic attached`() {
+        FakeOnvifDevice(ignoreUsernameToken = true, challengeSchemes = listOf("Basic"), digestAfterBasic = true).use { fake ->
+            fake.withDevice { device ->
+                assertFailsWith<OnvifUnauthorized> { runBlocking { device.getDeviceInformation() } }
+            }
+            // The fake records a violation for two Authorization headers in one request, and for
+            // Basic sent while its latest 401 offered Digest.
+            assertConformant(fake)
+        }
+    }
+
+    @Test
     fun `SECURITY - a device that needs no authentication is sent none`() {
         FakeOnvifDevice(credentials = null).use { fake ->
             val info = runBlocking {
