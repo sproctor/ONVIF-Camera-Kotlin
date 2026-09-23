@@ -69,8 +69,12 @@ private val PRE_AUTH_OPERATIONS = setOf("GetSystemDateAndTime", "GetServices", "
 internal class FakeOnvifDevice(
     private val media: Set<MediaService> = setOf(MediaService.MEDIA2, MediaService.MEDIA1),
     private val credentials: Pair<String, String>? = "admin" to "secret",
-    /** The scheme in the 401 challenge: `Digest`, as ONVIF requires, or `Basic` for the rare device that uses it. */
-    private val challengeScheme: String = "Digest",
+    /**
+     * The schemes a 401 offers, one WWW-Authenticate header each, in this order: `Digest`, as
+     * ONVIF requires, `Basic` for the rare device that uses only that, or both, as some firmware
+     * sends. Answering Basic when Digest was offered is a violation, whatever the order.
+     */
+    private val challengeSchemes: List<String> = listOf("Digest"),
     /** Authenticate in SOAP only: never challenge at the HTTP layer, answer NotAuthorized faults instead. */
     private val wsSecurityOnly: Boolean = false,
     /** Ignore any UsernameToken and authenticate at the HTTP layer only, as Axis firmware does. */
@@ -452,14 +456,18 @@ internal class FakeOnvifDevice(
     private fun authorized(x: HttpExchange, path: String): Boolean {
         val (user, pass) = credentials ?: return true
         val header = x.requestHeaders.getFirst("Authorization") ?: return false
-        val scheme = header.substringBefore(' ')
-        if (!scheme.equals(challengeScheme, ignoreCase = true)) {
+        val scheme = challengeSchemes.firstOrNull { it.equals(header.substringBefore(' '), ignoreCase = true) }
+        if (scheme == null) {
             // Credentials in a scheme the device never offered: at best wasted, at worst (Basic
             // over plain HTTP) the password in clear text.
-            violate("$path: Authorization uses $scheme after a $challengeScheme challenge")
+            violate("$path: Authorization uses ${header.substringBefore(' ')} after a $challengeSchemes challenge")
             return false
         }
-        if (challengeScheme == "Basic") {
+        if (scheme == "Basic") {
+            if ("Digest" in challengeSchemes) {
+                // The password in clear text to a device that would have taken Digest.
+                violate("$path: Authorization uses Basic although Digest was offered")
+            }
             val decoded = java.util.Base64.getDecoder().decode(header.substring("Basic ".length).trim()).decodeToString()
             return decoded == "$user:$pass"
         }
@@ -493,9 +501,11 @@ internal class FakeOnvifDevice(
 
     private fun challenge(x: HttpExchange) {
         challenges.incrementAndGet()
-        val value = if (challengeScheme == "Basic") "Basic realm=\"$realm\""
-        else "Digest realm=\"$realm\", nonce=\"$nonce\", qop=\"auth\", algorithm=MD5"
-        x.responseHeaders.add("WWW-Authenticate", value)
+        for (scheme in challengeSchemes) {
+            val value = if (scheme == "Basic") "Basic realm=\"$realm\""
+            else "Digest realm=\"$realm\", nonce=\"$nonce\", qop=\"auth\", algorithm=MD5"
+            x.responseHeaders.add("WWW-Authenticate", value)
+        }
         respond(x, 401, "text/plain", "Unauthorized")
     }
 
