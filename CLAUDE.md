@@ -74,7 +74,7 @@ XML strings and parses responses with kotlinx-serialization XML.
    Ktor `HttpClient` (`AutoCloseable`; `requestDevice` accepts a caller-supplied one). Every
    authenticated request carries a WS-Security UsernameToken built by `WsSecurity`, timestamped in
    device time (`GetSystemDateAndTime` at connect gives the clock offset); HTTP Digest, and Basic
-   only on a Basic challenge (`ChallengedBasicAuthProvider`), remain as the reactive fallback for
+   only when a 401 offers Basic and not Digest (`sendAuthenticated`), remain as the reactive fallback for
    devices that authenticate at the HTTP layer. `execute` posts the SOAP
    body, checks every response body for a SOAP fault (`parseOnvifFault`; cameras send faults with
    200 as well as 400/500) and throws it as `OnvifFault`, then maps remaining non-2xx statuses to

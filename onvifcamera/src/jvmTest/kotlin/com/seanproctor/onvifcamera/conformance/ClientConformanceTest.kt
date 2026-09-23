@@ -112,7 +112,7 @@ class ClientConformanceTest {
 
     @Test
     fun `SECURITY - a device that challenges with Basic is answered with Basic`() {
-        FakeOnvifDevice(ignoreUsernameToken = true, challengeScheme = "Basic").use { fake ->
+        FakeOnvifDevice(ignoreUsernameToken = true, challengeSchemes = listOf("Basic")).use { fake ->
             val info = fake.withDevice { device -> runBlocking { device.getDeviceInformation() } }
             assertEquals("FakeCam", info.model)
             assertConformant(fake)
@@ -126,6 +126,38 @@ class ClientConformanceTest {
                 assertFailsWith<OnvifUnauthorized> { runBlocking { device.getDeviceInformation() } }
             }
             // The fake records a violation if Basic is sent after its Digest challenge.
+            assertConformant(fake)
+        }
+    }
+
+    @Test
+    fun `SECURITY - a device offering Basic before Digest is answered with Digest`() {
+        FakeOnvifDevice(ignoreUsernameToken = true, challengeSchemes = listOf("Basic", "Digest")).use { fake ->
+            val info = fake.withDevice { device -> runBlocking { device.getDeviceInformation() } }
+            assertEquals("FakeCam", info.model)
+            // The fake records a violation if Basic is sent while Digest was on offer.
+            assertConformant(fake)
+        }
+    }
+
+    @Test
+    fun `SECURITY - wrong credentials are never retried in clear text when a device offers Digest and Basic`() {
+        FakeOnvifDevice(challengeSchemes = listOf("Digest", "Basic")).use { fake ->
+            fake.withDevice(password = "wrong") { device ->
+                assertFailsWith<OnvifUnauthorized> { runBlocking { device.getDeviceInformation() } }
+            }
+            assertConformant(fake)
+        }
+    }
+
+    @Test
+    fun `SECURITY - a Basic retry answered with a Digest challenge is not retried with Basic attached`() {
+        FakeOnvifDevice(ignoreUsernameToken = true, challengeSchemes = listOf("Basic"), digestAfterBasic = true).use { fake ->
+            fake.withDevice { device ->
+                assertFailsWith<OnvifUnauthorized> { runBlocking { device.getDeviceInformation() } }
+            }
+            // The fake records a violation for two Authorization headers in one request, and for
+            // Basic sent while its latest 401 offered Digest.
             assertConformant(fake)
         }
     }
@@ -201,6 +233,15 @@ class ClientConformanceTest {
             // A plain GET cannot carry WS-Security, so this is the one place the HTTP challenge is
             // expected even from a WS-Security client.
             assertTrue(fake.challenges.get() >= 1, "the snapshot GET should have been challenged and answered")
+            assertConformant(fake)
+        }
+    }
+
+    @Test
+    fun `SNAPSHOT - a device offering Basic before Digest is answered with Digest`() {
+        FakeOnvifDevice(challengeSchemes = listOf("Basic", "Digest")).use { fake ->
+            val bytes = fake.withDevice { device -> runBlocking { device.getSnapshot(device.getProfiles()[0]) } }
+            assertTrue(SNAPSHOT_JPEG.contentEquals(bytes))
             assertConformant(fake)
         }
     }
