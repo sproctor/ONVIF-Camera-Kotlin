@@ -15,6 +15,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.io.IOException
+import kotlin.io.encoding.Base64
 import java.time.Duration
 import java.time.Instant
 
@@ -109,7 +110,10 @@ public class OnvifDevice internal constructor(
      * @throws OnvifInvalidResponse on any other failure, or a 200 whose body is not an image
      */
     public suspend fun getSnapshot(snapshotUri: String): ByteArray {
-        val response = client.get(snapshotUri)
+        val response = client.sendAuthenticated(credentials) {
+            method = HttpMethod.Get
+            url(snapshotUri)
+        }
         when (response.status.value) {
             in 200..299 -> Unit
             401 -> throw OnvifUnauthorized("Unauthorized")
@@ -139,7 +143,7 @@ public class OnvifDevice internal constructor(
     @Suppress("NewApi") // java.time is API 26; the README requires minSdk 26 or desugaring
     private fun deviceNow(): Instant = Instant.now().plus(clockOffset ?: Duration.ZERO)
 
-    private suspend fun execute(endpoint: String, body: String): String = client.execute(endpoint, body, clockOffset)
+    private suspend fun execute(endpoint: String, body: String): String = client.execute(endpoint, body, credentials, clockOffset)
 
     private fun mediaService(): MediaService = media ?: throw OnvifServiceUnavailable(
         namespace = MediaService.MEDIA2.namespace,
@@ -208,7 +212,7 @@ public class OnvifDevice internal constructor(
                 val security = credentials?.let {
                     WsSecurity.usernameToken(it.username, it.password, Instant.now().plus(clockOffset ?: Duration.ZERO))
                 }
-                val result = client.execute(url, servicesCommand(security), clockOffset)
+                val result = client.execute(url, servicesCommand(security), credentials, clockOffset)
                 logger?.debug("Addresses: $result")
                 val services = parseOnvifServices(result)
                 // Work around bug in some cameras that return the incorrect IP address in the services
@@ -239,7 +243,7 @@ public class OnvifDevice internal constructor(
 
         public suspend fun getHostname(url: String, logger: OnvifLogger? = null): String? {
             HttpClient { configureFor(null, logger) }.use { client ->
-                val result = client.execute(url, OnvifCommands.getHostnameCommand, clockOffset = null)
+                val result = client.execute(url, OnvifCommands.getHostnameCommand, credentials = null, clockOffset = null)
                 return parseOnvifGetHostnameResponse(result)
             }
         }
@@ -270,8 +274,15 @@ public class OnvifDevice internal constructor(
             }
         }
 
-        private suspend fun HttpClient.execute(endpoint: String, body: String, clockOffset: Duration?): String {
-            val response = post(endpoint) {
+        private suspend fun HttpClient.execute(
+            endpoint: String,
+            body: String,
+            credentials: Credentials?,
+            clockOffset: Duration?,
+        ): String {
+            val response = sendAuthenticated(credentials) {
+                method = HttpMethod.Post
+                url(endpoint)
                 contentType(soapContentType)
                 setBody(body)
             }
@@ -294,6 +305,47 @@ public class OnvifDevice internal constructor(
 
 internal class Credentials(val username: String, val password: String)
 
+/**
+ * Sends the request, letting the client's Auth plugin answer a Digest challenge, and answers a
+ * Basic challenge only if the device offered Basic and not Digest.
+ *
+ * Basic is not left to the Auth plugin because the plugin chooses a provider per header: with a
+ * `WWW-Authenticate: Basic` header listed before `Digest` it answers Basic, and once a Digest
+ * attempt has failed (a wrong password) it falls back to whichever provider is left, Basic
+ * included. Either way the password would go out in clear text to a device that supports Digest.
+ * Deciding here, with every challenge header of the final 401 in view, keeps Basic for devices
+ * that offer nothing else.
+ */
+private suspend fun HttpClient.sendAuthenticated(
+    credentials: Credentials?,
+    block: HttpRequestBuilder.() -> Unit,
+): HttpResponse {
+    val response = request(block)
+    if (credentials == null || response.status != HttpStatusCode.Unauthorized) return response
+    val schemes = response.headers.getAll(HttpHeaders.WWWAuthenticate).orEmpty().flatMap(::challengeSchemes)
+    if ("digest" in schemes || "basic" !in schemes) return response
+    val basic = "Basic " + Base64.Default.encode("${credentials.username}:${credentials.password}".encodeToByteArray())
+    return request {
+        block()
+        headers[HttpHeaders.Authorization] = basic
+    }
+}
+
+/**
+ * The auth schemes a `WWW-Authenticate` value offers, lower-cased. One header may carry several
+ * challenges (`Basic realm="x", Digest realm="x", nonce="y"`), so this finds every token that
+ * starts the value or follows a comma and is not an `name=value` parameter, after blanking quoted
+ * strings so a comma or a scheme name inside a realm cannot pass for one. (Ktor's parser for
+ * this is internal API.)
+ */
+internal fun challengeSchemes(header: String): List<String> {
+    val unquoted = QUOTED_STRING.replace(header, "\"\"")
+    return SCHEME.findAll(unquoted).map { it.groupValues[1].lowercase() }.toList()
+}
+
+private val QUOTED_STRING = Regex(""""(?:[^"\\]|\\.)*"""")
+private val SCHEME = Regex("""(?:^|,)\s*([A-Za-z][A-Za-z0-9!#$%&'*+.^_`|~-]*)(?=\s+[^=\s]|\s*,|\s*$)""")
+
 /** SOI marker followed by any APPn/DQT segment: the start of every JPEG. */
 private fun ByteArray.isJpeg(): Boolean =
     size >= 3 && this[0] == 0xFF.toByte() && this[1] == 0xD8.toByte() && this[2] == 0xFF.toByte()
@@ -311,11 +363,10 @@ private fun OnvifFault.toException(clockOffset: Duration?): OnvifException {
     return OnvifUnauthorized((message ?: "Not authorized") + clockHint)
 }
 
-/** Digest on challenge, Basic only if that is what the device asked for; see [ChallengedBasicAuthProvider]. */
+/** Digest on challenge; Basic is handled by [sendAuthenticated], only for devices offering nothing else. */
 private fun HttpClientConfig<*>.configureFor(credentials: Credentials?, logger: OnvifLogger?) {
     if (credentials != null) {
         install(Auth) {
-            providers += ChallengedBasicAuthProvider(credentials.username, credentials.password)
             digest {
                 credentials {
                     DigestAuthCredentials(username = credentials.username, password = credentials.password)
