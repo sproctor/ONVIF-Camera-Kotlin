@@ -1,7 +1,6 @@
 package com.seanproctor.onvifcamera.network
 
 import kotlinx.coroutines.flow.Flow
-import java.net.DatagramPacket
 
 /** Sends WS-Discovery probes and yields the datagrams that come back. */
 internal interface SocketListener {
@@ -12,5 +11,8 @@ internal interface SocketListener {
      * cancelled, then closes the socket. Blocking socket work runs on
      * [kotlinx.coroutines.Dispatchers.IO]. Socket failures fail the flow.
      */
-    fun listenForPackets(): Flow<DatagramPacket>
+    fun listenForPackets(): Flow<Datagram>
 }
+
+/** A received datagram: its payload and the numeric address of the host that sent it. */
+internal class Datagram(val data: ByteArray, val senderHost: String)

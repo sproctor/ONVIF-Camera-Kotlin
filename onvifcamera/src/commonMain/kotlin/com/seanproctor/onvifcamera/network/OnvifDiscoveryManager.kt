@@ -32,6 +32,11 @@ public interface OnvifDiscoveryManager {
      * `android.permission.ACCESS_LOCAL_NETWORK`, declared in its manifest and granted at runtime,
      * before collecting: Android 17 blocks local-network UDP for such apps, and the flow fails
      * with an `IOException` if the permission is missing.
+     *
+     * On iOS, the app must hold Apple's `com.apple.developer.networking.multicast` entitlement to
+     * send the probe, and declare `NSLocalNetworkUsageDescription` in its `Info.plist`; without the
+     * entitlement, or until the user allows local-network access, the flow fails with an
+     * `IOException`.
      */
     public fun discoverDevices(): Flow<List<DiscoveredOnvifDevice>>
 }

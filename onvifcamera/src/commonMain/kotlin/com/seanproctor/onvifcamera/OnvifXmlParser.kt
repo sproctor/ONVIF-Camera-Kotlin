@@ -6,9 +6,7 @@ import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.serializer
 import nl.adaptivity.xmlutil.EventType
 import nl.adaptivity.xmlutil.util.CompactFragment
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneOffset
+import kotlin.time.Instant
 
 private inline fun <reified T : Any> parseSoap(input: String): T {
     val module = SerializersModule {
@@ -36,8 +34,7 @@ private inline fun <reified T : Any> parseSoap(input: String): T {
  * library raises about a device is an [OnvifException], as its API documents.
  */
 private fun notTheExpectedReply(expected: String?, cause: Exception): OnvifInvalidResponse =
-    OnvifInvalidResponse("Response is not a valid $expected: ${cause.message}")
-        .apply { initCause(cause) }
+    OnvifInvalidResponse("Response is not a valid $expected: ${cause.message}", cause)
 
 /**
  * The fault in [input], or null if it is not a SOAP fault. Only a well-formed fault counts:
@@ -72,7 +69,9 @@ private fun String.localName(): String = trim().substringAfterLast(':')
  * to their text nodes, entities decoded and whitespace collapsed. Null when there is none.
  */
 private fun detailText(fragment: CompactFragment): String? {
-    val text = fragment.getXmlReader().use { reader ->
+    // XmlReader is AutoCloseable only on the JVM, so no use { } here.
+    val reader = fragment.getXmlReader()
+    val text = try {
         buildString {
             while (reader.hasNext()) {
                 when (reader.next()) {
@@ -83,6 +82,8 @@ private fun detailText(fragment: CompactFragment): String? {
                 }
             }
         }
+    } finally {
+        reader.close()
     }
     return text.replace(WHITESPACE, " ").trim().ifEmpty { null }
 }
@@ -164,11 +165,14 @@ internal fun parseOnvifProbeResponse(input: String): List<ProbeMatch> {
 }
 
 /** The device's UTC time from a `GetSystemDateAndTime` reply, or null if it did not report one. */
-@Suppress("NewApi") // java.time is API 26; the README requires minSdk 26 or desugaring
 internal fun parseOnvifSystemDateAndTime(input: String): Instant? {
     val utc = parseSoap<GetSystemDateAndTimeResponse>(input).systemDateAndTime?.utcDateTime ?: return null
-    return LocalDateTime.of(utc.date.year, utc.date.month, utc.date.day, utc.time.hour, utc.time.minute, utc.time.second)
-        .toInstant(ZoneOffset.UTC)
+    // Instant.parse does the calendar arithmetic, and rejects out-of-range fields.
+    fun Int.pad(length: Int) = toString().padStart(length, '0')
+    return Instant.parse(
+        "${utc.date.year.pad(4)}-${utc.date.month.pad(2)}-${utc.date.day.pad(2)}" +
+            "T${utc.time.hour.pad(2)}:${utc.time.minute.pad(2)}:${utc.time.second.pad(2)}Z"
+    )
 }
 
 internal fun parseOnvifDeviceInformation(input: String): OnvifDeviceInformation {

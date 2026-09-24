@@ -11,6 +11,15 @@ import com.seanproctor.onvifcamera.OnvifLogger
  */
 public fun OnvifDiscoveryManager(context: Context, logger: OnvifLogger? = null): OnvifDiscoveryManager {
     val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-    val socketListener = AndroidSocketListener(wifiManager)
+    val multicastLock = wifiManager.createMulticastLock("OnvifCamera").apply { setReferenceCounted(true) }
+    val socketListener = ProbingSocketListener {
+        multicastLock.acquire()
+        try {
+            JavaProbeSocket(logger, onClose = { if (multicastLock.isHeld) multicastLock.release() })
+        } catch (e: Throwable) {
+            multicastLock.release()
+            throw e
+        }
+    }
     return OnvifDiscoveryManagerImpl(socketListener, logger)
 }

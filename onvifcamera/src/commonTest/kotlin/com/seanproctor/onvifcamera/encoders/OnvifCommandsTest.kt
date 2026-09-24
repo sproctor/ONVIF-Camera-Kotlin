@@ -4,7 +4,7 @@ import com.seanproctor.onvifcamera.MediaProfile
 import com.seanproctor.onvifcamera.MediaService
 import com.seanproctor.onvifcamera.OnvifCommands
 import com.seanproctor.onvifcamera.WsSecurity
-import java.time.Instant
+import kotlin.time.Instant
 import nl.adaptivity.xmlutil.EventType
 import nl.adaptivity.xmlutil.xmlStreaming
 import kotlin.test.Test
@@ -161,6 +161,13 @@ class OnvifCommandsTest {
         assertFalse(command.contains("secret"), "the password itself must never appear: $command")
         // The header precedes the body, as SOAP requires.
         assertTrue(command.indexOf("Security") < command.indexOf("GetDeviceInformation"), command)
+    }
+
+    @Test
+    fun testCreatedIsTruncatedToWholeSeconds() {
+        val security = WsSecurity.usernameToken("admin", "secret", Instant.parse("2026-09-22T12:00:00.750Z"))
+        val command = OnvifCommands.deviceInformationCommand(security)
+        assertEquals("2026-09-22T12:00:00Z", readElementText(command, "Created"))
     }
 
     @Test

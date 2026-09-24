@@ -6,9 +6,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A Kotlin Multiplatform library (`com.seanproctor:onvifcamera`) for talking to ONVIF cameras:
 device discovery (WS-Discovery), device info, media profiles, and stream/snapshot URIs.
-Published to Maven Central. Targets **Android** and **JVM** (iOS is stubbed out in the build
-config but not yet implemented — it requires reworking the socket interfaces, which currently
-depend on `java.net`).
+Published to Maven Central. Targets **Android**, **JVM** and **iOS** (`iosArm64`,
+`iosSimulatorArm64`).
+
+Source sets: `commonMain` is platform-free (no `java.*`); `jvmCommonMain` is shared by the JVM and
+Android (`java.net` discovery socket, `java.security` SHA-1/`SecureRandom`); `iosMain` has the
+BSD-socket and CommonCrypto/Security equivalents. Time is stdlib `kotlin.time` (`Instant`,
+`Clock`, `Duration`) — no kotlinx-datetime, and no `java.time`, so Android needs no desugaring.
+Kotlin/Native compiles iOS klibs on Linux, so `build`, `checkKotlinAbi` and publishing work there,
+but iOS tests only run on macOS (they are skipped elsewhere).
 
 The repo has two Gradle modules:
 - `:onvifcamera` — the published library.
@@ -21,10 +27,11 @@ The repo has two Gradle modules:
 ./gradlew :onvifcamera:build             # build the library only
 ./gradlew :onvifcamera:jvmTest           # run library tests on the JVM target
 ./gradlew :onvifcamera:allTests          # run tests across all targets
+./gradlew :onvifcamera:iosSimulatorArm64Test   # iOS tests in the simulator (macOS only)
 ./gradlew :onvifcamera:jvmTest --tests "com.seanproctor.onvifcamera.parsers.ParserTest"   # single test class
 ./gradlew :demo:run                      # run the desktop demo app
 ./gradlew :demo:installDebug             # install the Android demo on a connected device
-./gradlew :onvifcamera:updateLegacyAbi   # regenerate onvifcamera/api/*/onvifcamera.api after a public API change
+./gradlew :onvifcamera:updateLegacyAbi   # regenerate onvifcamera/api/ dumps after a public API change
 ./gradlew :onvifcamera:conformanceTest   # ONVIF client conformance suite; NOT run by build, run it after large changes
 ```
 
@@ -34,7 +41,8 @@ as part of `build` (`checkKotlinAbi`). Any change to a public signature fails th
 `updateLegacyAbi` is run and the updated `.api` files are committed; review that diff as the API
 change. The Android dump is the one that covers the `OnvifDiscoveryManager(Context, …)` factory.
 
-CI (`.github/workflows/ci.yml`) runs `./gradlew build` on pushes and PRs to master;
+CI (`.github/workflows/ci.yml`) runs `./gradlew build` on Linux and `iosSimulatorArm64Test` on
+macOS on pushes and PRs to master;
 `release.yml` publishes to Maven Central when a GitHub release is created, so the release tag must
 point at the commit that carries the bumped `version`. There is no separate lint step beyond what `build` runs.
 
@@ -88,20 +96,22 @@ XML strings and parses responses with kotlinx-serialization XML.
 
 ### Discovery
 
-WS-Discovery is UDP multicast and is **JVM-only code even in `commonMain`** — the discovery classes
-import `java.net.*` directly, which is why iOS isn't supported yet.
+WS-Discovery is UDP multicast (group `239.255.255.250:3702`).
 
 - `OnvifDiscoveryManager` (interface, commonMain) + `OnvifDiscoveryManagerImpl`. The platform factory
-  function `OnvifDiscoveryManager(...)` is `expect`-like: JVM takes only a logger; **Android requires
-  a `Context`** (to obtain a `WifiManager` for the multicast lock).
-- `SocketListener` / `BaseSocketListener` do the multicast work (group `239.255.255.250:3702`).
-  The Android vs JVM subclasses differ only in `acquireMulticastLock`/`releaseMulticastLock`
-  (`AndroidSocketListener` holds a WifiManager `MulticastLock`; the JVM one is a no-op).
+  function `OnvifDiscoveryManager(...)` is `expect`-like: JVM and iOS take only a logger; **Android
+  requires a `Context`** (to obtain a `WifiManager` for the multicast lock).
+- `ProbingSocketListener` (commonMain) implements `SocketListener`: the probe schedule and the
+  receive loop, over a blocking `ProbeSocket` (send to the group on every multicast interface,
+  receive with a 500 ms timeout, close) that each platform supplies: `JavaProbeSocket`
+  (`jvmCommonMain`, `java.net`) and `PosixProbeSocket` (`iosMain`, BSD sockets via
+  `platform.posix`/`platform.darwin`). The Android factory wraps `JavaProbeSocket` in the
+  WifiManager `MulticastLock`. Datagrams cross into common code as `Datagram(data, senderHost)`.
 - `discoverDevices()` returns a **cold** `Flow<List<DiscoveredOnvifDevice>>`: collecting
   it opens the socket, probes, and listens until the collector is cancelled, which closes the socket
   (a read timeout bounds that). The probe is retransmitted on the SOAP-over-UDP 1.1 multicast
   schedule (3 sends, random 50-250 ms gap doubling to a 500 ms cap); there is no knob for it.
-  It is a `runningFold` over an immutable map keyed by source `InetAddress` — dedupes by
+  It is a `runningFold` over an immutable map keyed by sender host — dedupes by
   address, keeps discovery order, `distinctUntilChanged` conflates identical retransmission
   replies. Socket I/O and parsing run on `Dispatchers.IO`. Socket errors fail the
   flow; unparseable replies are logged and dropped. `OnvifDiscoveryManagerImplTest` drives the
@@ -116,7 +126,9 @@ provided it's also wired into Ktor's logging plugin. The library has no default 
 
 Parser tests live in `onvifcamera/src/commonTest` and decode real captured camera XML stored in
 `onvifcamera/src/commonTest/resources/*.xml`. Reading those resource files goes through an
-`expect/actual` `readResourceFile` (`TestUtil.kt` + per-target `TestUtil.<platform>.kt`). When
+`expect/actual` `readResourceFile` (`TestUtil.kt` + per-target `TestUtil.<platform>.kt`; the iOS
+one reads the files in place, from the path `build.gradle.kts` passes to the simulator as
+`SIMCTL_CHILD_ONVIF_TEST_RESOURCES`). When
 adding support for a new camera quirk, add its captured response as a resource and a parser test.
 Media operations use Media2 (`tr2`, `ver20/media`) when the camera advertises it and Media1
 (`trt`, `ver10/media`) otherwise (`MediaService`); `GetProfiles` on Media2 asks for

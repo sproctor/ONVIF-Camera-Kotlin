@@ -6,9 +6,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import java.io.IOException
-import java.net.DatagramPacket
-import java.net.InetAddress
+import kotlinx.io.IOException
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -22,14 +20,11 @@ class OnvifDiscoveryManagerImplTest {
     private val axisReply = readResourceFile("probeResponse.xml")
     private val otherReply = readResourceFile("probeResponse2.xml")
 
-    private fun packet(body: String, from: String): DatagramPacket {
-        val bytes = body.encodeToByteArray()
-        return DatagramPacket(bytes, bytes.size, InetAddress.getByName(from), 3702)
-    }
+    private fun packet(body: String, from: String) = Datagram(body.encodeToByteArray(), from)
 
-    private fun manager(vararg packets: DatagramPacket) = manager(flowOf(*packets))
+    private fun manager(vararg packets: Datagram) = manager(flowOf(*packets))
 
-    private fun manager(packets: Flow<DatagramPacket>) = OnvifDiscoveryManagerImpl(
+    private fun manager(packets: Flow<Datagram>) = OnvifDiscoveryManagerImpl(
         socketListener = object : SocketListener {
             override fun listenForPackets() = packets
         },
@@ -81,7 +76,7 @@ class OnvifDiscoveryManagerImplTest {
 
     @Test
     fun socketFailureFailsTheFlow() = runTest {
-        val failing = flow<DatagramPacket> { throw IOException("no network") }
+        val failing = flow<Datagram> { throw IOException("no network") }
 
         assertFailsWith<IOException> {
             manager(failing).discoverDevices().toList()

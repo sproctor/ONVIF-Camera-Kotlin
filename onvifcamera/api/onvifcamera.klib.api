@@ -1,0 +1,123 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.seanproctor:onvifcamera>
+abstract interface com.seanproctor.onvifcamera.network/OnvifDiscoveryManager { // com.seanproctor.onvifcamera.network/OnvifDiscoveryManager|null[0]
+    abstract fun discoverDevices(): kotlinx.coroutines.flow/Flow<kotlin.collections/List<com.seanproctor.onvifcamera/DiscoveredOnvifDevice>> // com.seanproctor.onvifcamera.network/OnvifDiscoveryManager.discoverDevices|discoverDevices(){}[0]
+}
+
+abstract interface com.seanproctor.onvifcamera/OnvifLogger { // com.seanproctor.onvifcamera/OnvifLogger|null[0]
+    abstract fun debug(kotlin/String) // com.seanproctor.onvifcamera/OnvifLogger.debug|debug(kotlin.String){}[0]
+    abstract fun error(kotlin/String, kotlin/Throwable?) // com.seanproctor.onvifcamera/OnvifLogger.error|error(kotlin.String;kotlin.Throwable?){}[0]
+}
+
+abstract class com.seanproctor.onvifcamera/OnvifException : kotlin/Exception // com.seanproctor.onvifcamera/OnvifException|null[0]
+
+final class com.seanproctor.onvifcamera/DiscoveredOnvifDevice { // com.seanproctor.onvifcamera/DiscoveredOnvifDevice|null[0]
+    constructor <init>(kotlin/String, kotlin.collections/List<kotlin/String>, kotlin.collections/List<kotlin/String>, kotlin.collections/List<kotlin/String>) // com.seanproctor.onvifcamera/DiscoveredOnvifDevice.<init>|<init>(kotlin.String;kotlin.collections.List<kotlin.String>;kotlin.collections.List<kotlin.String>;kotlin.collections.List<kotlin.String>){}[0]
+
+    final val addresses // com.seanproctor.onvifcamera/DiscoveredOnvifDevice.addresses|{}addresses[0]
+        final fun <get-addresses>(): kotlin.collections/List<kotlin/String> // com.seanproctor.onvifcamera/DiscoveredOnvifDevice.addresses.<get-addresses>|<get-addresses>(){}[0]
+    final val id // com.seanproctor.onvifcamera/DiscoveredOnvifDevice.id|{}id[0]
+        final fun <get-id>(): kotlin/String // com.seanproctor.onvifcamera/DiscoveredOnvifDevice.id.<get-id>|<get-id>(){}[0]
+    final val scopes // com.seanproctor.onvifcamera/DiscoveredOnvifDevice.scopes|{}scopes[0]
+        final fun <get-scopes>(): kotlin.collections/List<kotlin/String> // com.seanproctor.onvifcamera/DiscoveredOnvifDevice.scopes.<get-scopes>|<get-scopes>(){}[0]
+    final val types // com.seanproctor.onvifcamera/DiscoveredOnvifDevice.types|{}types[0]
+        final fun <get-types>(): kotlin.collections/List<kotlin/String> // com.seanproctor.onvifcamera/DiscoveredOnvifDevice.types.<get-types>|<get-types>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.seanproctor.onvifcamera/DiscoveredOnvifDevice.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.seanproctor.onvifcamera/DiscoveredOnvifDevice.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.seanproctor.onvifcamera/DiscoveredOnvifDevice.toString|toString(){}[0]
+}
+
+final class com.seanproctor.onvifcamera/MediaProfile { // com.seanproctor.onvifcamera/MediaProfile|null[0]
+    constructor <init>(kotlin/String, kotlin/String?, kotlin/String?, kotlin/Int? = ..., kotlin/Int? = ...) // com.seanproctor.onvifcamera/MediaProfile.<init>|<init>(kotlin.String;kotlin.String?;kotlin.String?;kotlin.Int?;kotlin.Int?){}[0]
+
+    final val encoding // com.seanproctor.onvifcamera/MediaProfile.encoding|{}encoding[0]
+        final fun <get-encoding>(): kotlin/String? // com.seanproctor.onvifcamera/MediaProfile.encoding.<get-encoding>|<get-encoding>(){}[0]
+    final val height // com.seanproctor.onvifcamera/MediaProfile.height|{}height[0]
+        final fun <get-height>(): kotlin/Int? // com.seanproctor.onvifcamera/MediaProfile.height.<get-height>|<get-height>(){}[0]
+    final val name // com.seanproctor.onvifcamera/MediaProfile.name|{}name[0]
+        final fun <get-name>(): kotlin/String? // com.seanproctor.onvifcamera/MediaProfile.name.<get-name>|<get-name>(){}[0]
+    final val token // com.seanproctor.onvifcamera/MediaProfile.token|{}token[0]
+        final fun <get-token>(): kotlin/String // com.seanproctor.onvifcamera/MediaProfile.token.<get-token>|<get-token>(){}[0]
+    final val width // com.seanproctor.onvifcamera/MediaProfile.width|{}width[0]
+        final fun <get-width>(): kotlin/Int? // com.seanproctor.onvifcamera/MediaProfile.width.<get-width>|<get-width>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.seanproctor.onvifcamera/MediaProfile.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.seanproctor.onvifcamera/MediaProfile.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.seanproctor.onvifcamera/MediaProfile.toString|toString(){}[0]
+}
+
+final class com.seanproctor.onvifcamera/OnvifDevice : kotlin/AutoCloseable { // com.seanproctor.onvifcamera/OnvifDevice|null[0]
+    final fun close() // com.seanproctor.onvifcamera/OnvifDevice.close|close(){}[0]
+    final suspend fun getDeviceInformation(): com.seanproctor.onvifcamera/OnvifDeviceInformation // com.seanproctor.onvifcamera/OnvifDevice.getDeviceInformation|getDeviceInformation(){}[0]
+    final suspend fun getProfiles(): kotlin.collections/List<com.seanproctor.onvifcamera/MediaProfile> // com.seanproctor.onvifcamera/OnvifDevice.getProfiles|getProfiles(){}[0]
+    final suspend fun getSnapshot(com.seanproctor.onvifcamera/MediaProfile): kotlin/ByteArray // com.seanproctor.onvifcamera/OnvifDevice.getSnapshot|getSnapshot(com.seanproctor.onvifcamera.MediaProfile){}[0]
+    final suspend fun getSnapshot(kotlin/String): kotlin/ByteArray // com.seanproctor.onvifcamera/OnvifDevice.getSnapshot|getSnapshot(kotlin.String){}[0]
+    final suspend fun getSnapshotURI(com.seanproctor.onvifcamera/MediaProfile): kotlin/String // com.seanproctor.onvifcamera/OnvifDevice.getSnapshotURI|getSnapshotURI(com.seanproctor.onvifcamera.MediaProfile){}[0]
+    final suspend fun getStreamURI(com.seanproctor.onvifcamera/MediaProfile): kotlin/String // com.seanproctor.onvifcamera/OnvifDevice.getStreamURI|getStreamURI(com.seanproctor.onvifcamera.MediaProfile){}[0]
+
+    final object Companion { // com.seanproctor.onvifcamera/OnvifDevice.Companion|null[0]
+        final suspend fun getHostname(kotlin/String, com.seanproctor.onvifcamera/OnvifLogger? = ...): kotlin/String? // com.seanproctor.onvifcamera/OnvifDevice.Companion.getHostname|getHostname(kotlin.String;com.seanproctor.onvifcamera.OnvifLogger?){}[0]
+        final suspend fun isReachableEndpoint(kotlin/String, com.seanproctor.onvifcamera/OnvifLogger? = ...): kotlin/Boolean // com.seanproctor.onvifcamera/OnvifDevice.Companion.isReachableEndpoint|isReachableEndpoint(kotlin.String;com.seanproctor.onvifcamera.OnvifLogger?){}[0]
+        final suspend fun requestDevice(kotlin/String, kotlin/String? = ..., kotlin/String? = ..., com.seanproctor.onvifcamera/OnvifLogger? = ..., io.ktor.client/HttpClient? = ...): com.seanproctor.onvifcamera/OnvifDevice // com.seanproctor.onvifcamera/OnvifDevice.Companion.requestDevice|requestDevice(kotlin.String;kotlin.String?;kotlin.String?;com.seanproctor.onvifcamera.OnvifLogger?;io.ktor.client.HttpClient?){}[0]
+    }
+}
+
+final class com.seanproctor.onvifcamera/OnvifDeviceInformation { // com.seanproctor.onvifcamera/OnvifDeviceInformation|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/String, kotlin/String, kotlin/String) // com.seanproctor.onvifcamera/OnvifDeviceInformation.<init>|<init>(kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String){}[0]
+
+    final val firmwareVersion // com.seanproctor.onvifcamera/OnvifDeviceInformation.firmwareVersion|{}firmwareVersion[0]
+        final fun <get-firmwareVersion>(): kotlin/String // com.seanproctor.onvifcamera/OnvifDeviceInformation.firmwareVersion.<get-firmwareVersion>|<get-firmwareVersion>(){}[0]
+    final val hardwareId // com.seanproctor.onvifcamera/OnvifDeviceInformation.hardwareId|{}hardwareId[0]
+        final fun <get-hardwareId>(): kotlin/String // com.seanproctor.onvifcamera/OnvifDeviceInformation.hardwareId.<get-hardwareId>|<get-hardwareId>(){}[0]
+    final val manufacturer // com.seanproctor.onvifcamera/OnvifDeviceInformation.manufacturer|{}manufacturer[0]
+        final fun <get-manufacturer>(): kotlin/String // com.seanproctor.onvifcamera/OnvifDeviceInformation.manufacturer.<get-manufacturer>|<get-manufacturer>(){}[0]
+    final val model // com.seanproctor.onvifcamera/OnvifDeviceInformation.model|{}model[0]
+        final fun <get-model>(): kotlin/String // com.seanproctor.onvifcamera/OnvifDeviceInformation.model.<get-model>|<get-model>(){}[0]
+    final val serialNumber // com.seanproctor.onvifcamera/OnvifDeviceInformation.serialNumber|{}serialNumber[0]
+        final fun <get-serialNumber>(): kotlin/String // com.seanproctor.onvifcamera/OnvifDeviceInformation.serialNumber.<get-serialNumber>|<get-serialNumber>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.seanproctor.onvifcamera/OnvifDeviceInformation.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.seanproctor.onvifcamera/OnvifDeviceInformation.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.seanproctor.onvifcamera/OnvifDeviceInformation.toString|toString(){}[0]
+}
+
+final class com.seanproctor.onvifcamera/OnvifFault : com.seanproctor.onvifcamera/OnvifException { // com.seanproctor.onvifcamera/OnvifFault|null[0]
+    constructor <init>(kotlin/String?, kotlin.collections/List<kotlin/String>, kotlin/String?, kotlin/String?) // com.seanproctor.onvifcamera/OnvifFault.<init>|<init>(kotlin.String?;kotlin.collections.List<kotlin.String>;kotlin.String?;kotlin.String?){}[0]
+
+    final val code // com.seanproctor.onvifcamera/OnvifFault.code|{}code[0]
+        final fun <get-code>(): kotlin/String? // com.seanproctor.onvifcamera/OnvifFault.code.<get-code>|<get-code>(){}[0]
+    final val detail // com.seanproctor.onvifcamera/OnvifFault.detail|{}detail[0]
+        final fun <get-detail>(): kotlin/String? // com.seanproctor.onvifcamera/OnvifFault.detail.<get-detail>|<get-detail>(){}[0]
+    final val reason // com.seanproctor.onvifcamera/OnvifFault.reason|{}reason[0]
+        final fun <get-reason>(): kotlin/String? // com.seanproctor.onvifcamera/OnvifFault.reason.<get-reason>|<get-reason>(){}[0]
+    final val subcodes // com.seanproctor.onvifcamera/OnvifFault.subcodes|{}subcodes[0]
+        final fun <get-subcodes>(): kotlin.collections/List<kotlin/String> // com.seanproctor.onvifcamera/OnvifFault.subcodes.<get-subcodes>|<get-subcodes>(){}[0]
+}
+
+final class com.seanproctor.onvifcamera/OnvifForbidden : com.seanproctor.onvifcamera/OnvifException { // com.seanproctor.onvifcamera/OnvifForbidden|null[0]
+    constructor <init>(kotlin/String) // com.seanproctor.onvifcamera/OnvifForbidden.<init>|<init>(kotlin.String){}[0]
+}
+
+final class com.seanproctor.onvifcamera/OnvifInvalidResponse : com.seanproctor.onvifcamera/OnvifException { // com.seanproctor.onvifcamera/OnvifInvalidResponse|null[0]
+    constructor <init>(kotlin/String) // com.seanproctor.onvifcamera/OnvifInvalidResponse.<init>|<init>(kotlin.String){}[0]
+}
+
+final class com.seanproctor.onvifcamera/OnvifServiceUnavailable : com.seanproctor.onvifcamera/OnvifException { // com.seanproctor.onvifcamera/OnvifServiceUnavailable|null[0]
+    constructor <init>(kotlin/String) // com.seanproctor.onvifcamera/OnvifServiceUnavailable.<init>|<init>(kotlin.String){}[0]
+
+    final val namespace // com.seanproctor.onvifcamera/OnvifServiceUnavailable.namespace|{}namespace[0]
+        final fun <get-namespace>(): kotlin/String // com.seanproctor.onvifcamera/OnvifServiceUnavailable.namespace.<get-namespace>|<get-namespace>(){}[0]
+}
+
+final class com.seanproctor.onvifcamera/OnvifUnauthorized : com.seanproctor.onvifcamera/OnvifException { // com.seanproctor.onvifcamera/OnvifUnauthorized|null[0]
+    constructor <init>(kotlin/String) // com.seanproctor.onvifcamera/OnvifUnauthorized.<init>|<init>(kotlin.String){}[0]
+}
+
+final fun com.seanproctor.onvifcamera.network/OnvifDiscoveryManager(com.seanproctor.onvifcamera/OnvifLogger? = ...): com.seanproctor.onvifcamera.network/OnvifDiscoveryManager // com.seanproctor.onvifcamera.network/OnvifDiscoveryManager|OnvifDiscoveryManager(com.seanproctor.onvifcamera.OnvifLogger?){}[0]

@@ -1,6 +1,6 @@
 # ONVIF Camera Kotlin
-Kotlin Multiplatform library for ONVIF cameras on Android and JVM: WS-Discovery on the local
-network, device information, media profiles, and stream and snapshot URIs.
+Kotlin Multiplatform library for ONVIF cameras on Android, the JVM and iOS: WS-Discovery on the
+local network, device information, media profiles, and stream and snapshot URIs.
 
 Install with Gradle (must have mavenCentral in repositories):
 
@@ -9,32 +9,29 @@ implementation("com.seanproctor:onvifcamera:<VERSION>")
 ```
 
 The HTTP engine comes with it (Ktor's `ktor-client-engine-defaults`: OkHttp on the JVM and on
-Android), so there is nothing else to add.
+Android, Darwin on iOS), so there is nothing else to add.
 
-### Android: API 26, or core library desugaring
+### iOS: Info.plist and entitlement
 
-The library uses `java.time` for the WS-Security timestamps and the camera clock, which Android
-only has from API 26. An app with `minSdk` 26 or higher needs nothing. An app with a lower `minSdk` must enable
-[core library desugaring](https://developer.android.com/studio/write/java8-support#library-desugaring),
-or the first `requestDevice` throws `NoClassDefFoundError` on Android 6.0–7.1:
+iOS asks the user before an app talks to the local network, and a camera is on it, so the app's
+`Info.plist` needs `NSLocalNetworkUsageDescription`: the text of that prompt. Until the user
+allows it, requests to cameras and discovery fail.
 
-```kotlin
-android {
-    compileOptions {
-        isCoreLibraryDesugaringEnabled = true
-    }
-}
+Cameras speak plain HTTP, which App Transport Security restricts. Allow it for local-network
+hosts with `NSAllowsLocalNetworking` under `NSAppTransportSecurity`; a camera reached by a public
+DNS name needs an ATS exception for that domain.
 
-dependencies {
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
-}
-```
+Discovery sends a multicast probe, and iOS allows that only to apps holding the
+`com.apple.developer.networking.multicast` entitlement, which Apple grants on request. Without it
+the probe cannot be sent and the discovery flow fails with an `IOException`. Everything else works
+without the entitlement: connect with an address the user enters.
 
 ## Discover cameras on the local network
 
 ```kotlin
 val discovery = OnvifDiscoveryManager()
 // On Android: OnvifDiscoveryManager(context), which needs the Context for the multicast lock.
+// On iOS the app needs the multicast entitlement; see above.
 
 // The flow is cold. Collecting it opens a socket, sends the WS-Discovery probe on the
 // SOAP-over-UDP retransmission schedule and keeps listening until the collector is
