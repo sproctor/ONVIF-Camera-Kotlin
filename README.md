@@ -21,17 +21,18 @@ Cameras speak plain HTTP, which App Transport Security restricts. Allow it for l
 hosts with `NSAllowsLocalNetworking` under `NSAppTransportSecurity`; a camera reached by a public
 DNS name needs an ATS exception for that domain.
 
-Discovery sends a multicast probe, and iOS allows that only to apps holding the
+Discovery sends a multicast probe, and on a device iOS allows that only to apps holding the
 `com.apple.developer.networking.multicast` entitlement, which Apple grants on request. Without it
-the probe cannot be sent and the discovery flow fails with an `IOException`. Everything else works
-without the entitlement: connect with an address the user enters.
+the probe cannot be sent and the discovery flow fails with an `IOException`. The simulator runs on
+the Mac's network stack and does not enforce the entitlement, so discovery works there without it.
+Everything else works without the entitlement: connect with an address the user enters.
 
 ## Discover cameras on the local network
 
 ```kotlin
 val discovery = OnvifDiscoveryManager()
 // On Android: OnvifDiscoveryManager(context), which needs the Context for the multicast lock.
-// On iOS the app needs the multicast entitlement; see above.
+// On iOS the app needs the multicast entitlement on a device; see above.
 
 // The flow is cold. Collecting it opens a socket, sends the WS-Discovery probe on the
 // SOAP-over-UDP retransmission schedule and keeps listening until the collector is
