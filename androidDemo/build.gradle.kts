@@ -8,7 +8,6 @@ kotlin {
     jvmToolchain(17)
     dependencies {
         implementation(project(":demo"))
-        coreLibraryDesugaring(libs.desugar.jdk.libs)
 
         implementation(libs.ktor.client.core)
         implementation(libs.ktor.client.auth)
@@ -40,10 +39,5 @@ android {
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
-    }
-    // The library uses java.time, which is API 26,
-    // and the demo runs on 23.
-    compileOptions {
-        isCoreLibraryDesugaringEnabled = true
     }
 }

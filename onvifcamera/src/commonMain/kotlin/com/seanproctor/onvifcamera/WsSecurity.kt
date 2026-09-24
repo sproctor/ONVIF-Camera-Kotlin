@@ -6,17 +6,11 @@ import com.seanproctor.onvifcamera.soap.PASSWORD_DIGEST_TYPE
 import com.seanproctor.onvifcamera.soap.Password
 import com.seanproctor.onvifcamera.soap.Security
 import com.seanproctor.onvifcamera.soap.UsernameToken
-import java.security.MessageDigest
-import java.security.SecureRandom
-import java.time.Instant
-import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 import kotlin.io.encoding.Base64
+import kotlin.time.Instant
 
 /** Builds the WS-Security header ONVIF devices authenticate with. */
 internal object WsSecurity {
-    private val random = SecureRandom()
-
     /**
      * A fresh UsernameToken: a random 16-byte nonce, [deviceTime] as the `Created` timestamp,
      * and `Base64(SHA-1(nonce + created + password))` as the password digest.
@@ -25,16 +19,11 @@ internal object WsSecurity {
      * [deviceTime] must be the device's idea of now, not this host's; see
      * [OnvifDevice.requestDevice] for how it is learnt.
      */
-    @Suppress("NewApi") // java.time is API 26; the README requires minSdk 26 or desugaring
     fun usernameToken(username: String, password: String, deviceTime: Instant): Security {
-        val nonce = ByteArray(16).also(random::nextBytes)
-        val created = DateTimeFormatter.ISO_INSTANT.format(deviceTime.truncatedTo(ChronoUnit.SECONDS))
-        val digest = MessageDigest.getInstance("SHA-1").run {
-            update(nonce)
-            update(created.encodeToByteArray())
-            update(password.encodeToByteArray())
-            digest()
-        }
+        val nonce = secureRandomBytes(16)
+        // Whole seconds, so the ISO-8601 form has no fraction: 2026-09-22T12:00:00Z.
+        val created = Instant.fromEpochSeconds(deviceTime.epochSeconds).toString()
+        val digest = sha1(nonce, created.encodeToByteArray(), password.encodeToByteArray())
         return Security(
             UsernameToken(
                 username = username,

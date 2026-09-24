@@ -16,8 +16,9 @@ import io.ktor.http.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.io.IOException
 import kotlin.io.encoding.Base64
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Instant
 
 /**
  * A connected ONVIF device: the handle [requestDevice] returns, holding the services the device
@@ -140,8 +141,7 @@ public class OnvifDevice internal constructor(
     private fun security(): Security? =
         credentials?.let { WsSecurity.usernameToken(it.username, it.password, deviceNow()) }
 
-    @Suppress("NewApi") // java.time is API 26; the README requires minSdk 26 or desugaring
-    private fun deviceNow(): Instant = Instant.now().plus(clockOffset ?: Duration.ZERO)
+    private fun deviceNow(): Instant = Clock.System.now() + (clockOffset ?: Duration.ZERO)
 
     private suspend fun execute(endpoint: String, body: String): String = client.execute(endpoint, body, credentials, clockOffset)
 
@@ -196,7 +196,6 @@ public class OnvifDevice internal constructor(
          * @throws OnvifException if the device rejects the request or answers with something
          *   that is not a services list
          */
-        @Suppress("NewApi") // java.time is API 26; the README requires minSdk 26 or desugaring
         public suspend fun requestDevice(
             url: String,
             username: String? = null,
@@ -210,7 +209,7 @@ public class OnvifDevice internal constructor(
             try {
                 val clockOffset = readClockOffset(client, url, logger)
                 val security = credentials?.let {
-                    WsSecurity.usernameToken(it.username, it.password, Instant.now().plus(clockOffset ?: Duration.ZERO))
+                    WsSecurity.usernameToken(it.username, it.password, Clock.System.now() + (clockOffset ?: Duration.ZERO))
                 }
                 val result = client.execute(url, servicesCommand(security), credentials, clockOffset)
                 logger?.debug("Addresses: $result")
@@ -253,7 +252,6 @@ public class OnvifDevice internal constructor(
          * did not answer or did not report UTC time. A failure here is not fatal: tokens are then
          * stamped with this host's time, which is right whenever the clocks agree.
          */
-        @Suppress("NewApi") // java.time is API 26; the README requires minSdk 26 or desugaring
         private suspend fun readClockOffset(client: HttpClient, url: String, logger: OnvifLogger?): Duration? {
             try {
                 val response = client.post(url) {
@@ -265,7 +263,7 @@ public class OnvifDevice internal constructor(
                     logger?.debug("Device did not report its UTC time; WS-Security timestamps use this host's clock")
                     return null
                 }
-                return Duration.between(Instant.now(), deviceTime).also { logger?.debug("Device clock offset: $it") }
+                return (deviceTime - Clock.System.now()).also { logger?.debug("Device clock offset: $it") }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

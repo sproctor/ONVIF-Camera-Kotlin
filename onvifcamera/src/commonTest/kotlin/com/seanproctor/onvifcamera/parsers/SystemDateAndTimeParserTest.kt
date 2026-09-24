@@ -4,7 +4,7 @@ import com.seanproctor.onvifcamera.parseOnvifSystemDateAndTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import java.time.Instant
+import kotlin.time.Instant
 
 class SystemDateAndTimeParserTest {
 
