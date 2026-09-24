@@ -20,7 +20,10 @@ LGPL). `VlcRtspPlayer.swift` implements the Kotlin `RtspPlayerFactory`, and the 
 
 ## Discovery
 
-Sending the WS-Discovery multicast probe needs Apple's
+In the simulator, Scan works as it is: the simulator runs on the Mac's network stack and does not
+enforce iOS's multicast restriction.
+
+On a device, sending the WS-Discovery multicast probe needs Apple's
 `com.apple.developer.networking.multicast` entitlement, which Apple grants per team on request
 ([request form](https://developer.apple.com/contact/request/networking-multicast)). The project
 does not ask for it, because signing fails for a team that has not been granted it. Without it,

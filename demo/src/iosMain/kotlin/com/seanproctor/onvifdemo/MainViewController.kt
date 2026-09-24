@@ -22,8 +22,8 @@ fun MainViewController(playerFactory: RtspPlayerFactory): UIViewController {
             Napier.d(message)
         }
     }
-    // Discovery needs the multicast entitlement (see iosDemo/README.md); without it the Scan
-    // button reports the failure and connecting by address still works.
+    // On a device, discovery needs the multicast entitlement (see iosDemo/README.md); without
+    // it the Scan button reports the failure and connecting by address still works.
     val onvifDiscoveryManager = OnvifDiscoveryManager(logger)
     return ComposeUIViewController {
         CompositionLocalProvider(LocalRtspPlayerFactory provides playerFactory) {
