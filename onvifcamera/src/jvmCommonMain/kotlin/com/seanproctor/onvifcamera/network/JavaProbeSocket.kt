@@ -21,6 +21,14 @@ internal class JavaProbeSocket(
     private val onClose: () -> Unit = {},
 ) : ProbeSocket {
 
+    // The default multicast route is often not the camera's network (docker
+    // and VM bridges, VPNs), so probe on every interface that can multicast.
+    // Both are set before the socket is opened, so nothing after the open can fail
+    // outside the init block that closes it.
+    private val interfaces: List<NetworkInterface> = multicastInterfaces()
+
+    private val multicastAddress: InetAddress = InetAddress.getByName(MULTICAST_ADDRESS)
+
     private val socket = MulticastSocket(null)
 
     init {
@@ -44,12 +52,6 @@ internal class JavaProbeSocket(
         }
         logger?.debug("Discovery socket bound to port ${socket.localPort}")
     }
-
-    // The default multicast route is often not the camera's network (docker
-    // and VM bridges, VPNs), so probe on every interface that can multicast.
-    private val interfaces: List<NetworkInterface> = multicastInterfaces()
-
-    private val multicastAddress: InetAddress = InetAddress.getByName(MULTICAST_ADDRESS)
 
     override fun sendProbe(message: ByteArray) {
         val datagram = DatagramPacket(message, message.size, multicastAddress, MULTICAST_PORT)
