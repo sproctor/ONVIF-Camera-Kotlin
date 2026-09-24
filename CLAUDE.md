@@ -18,7 +18,8 @@ but iOS tests only run on macOS (they are skipped elsewhere).
 
 The repo has two Gradle modules:
 - `:onvifcamera` — the published library.
-- `:demo` — a Compose Multiplatform (Android + desktop JVM) sample app; not published.
+- `:demo` — a Compose Multiplatform (Android + desktop JVM + iOS) sample app; not published.
+  `:androidDemo` is its Android application; `iosDemo/` is its Xcode project (not a Gradle module).
 
 ## Commands
 
@@ -41,8 +42,8 @@ as part of `build` (`checkKotlinAbi`). Any change to a public signature fails th
 `updateLegacyAbi` is run and the updated `.api` files are committed; review that diff as the API
 change. The Android dump is the one that covers the `OnvifDiscoveryManager(Context, …)` factory.
 
-CI (`.github/workflows/ci.yml`) runs `./gradlew build` on Linux and `iosSimulatorArm64Test` on
-macOS on pushes and PRs to master;
+CI (`.github/workflows/ci.yml`) runs `./gradlew build` on Linux, and `iosSimulatorArm64Test` and
+an `xcodebuild` of the iOS demo on macOS, on pushes and PRs to master;
 `release.yml` publishes to Maven Central when a GitHub release is created, so the release tag must
 point at the commit that carries the bumped `version`. There is no separate lint step beyond what `build` runs.
 
@@ -144,3 +145,11 @@ The demo plays RTSP streams with platform-specific players behind an `expect`/`a
 `StreamPlayer`: **Media3/ExoPlayer** on Android, **bytedeco FFmpeg** on desktop (the desktop build
 selects the correct native FFmpeg artifact per host OS in `demo/build.gradle.kts`). Desktop entry
 point is `com.seanproctor.onvifdemo.MainKt`.
+
+On **iOS** the `:demo` module builds a static `OnvifDemo` framework; `iosDemo/` is a SwiftUI app
+that calls `MainViewController(playerFactory)` and builds the framework from an Xcode build phase
+(`embedAndSignAppleFrameworkForXcode`). iOS has no RTSP player, so `StreamPlayer` hosts a
+`UIView` from an `RtspPlayerFactory` the Swift side implements with VLCKit (the `vlckit-spm`
+Swift package, pinned to 3.6.0). The Compose `ui`/`foundation`/`runtime` artifacts are pinned to
+the Compose plugin version because material3 lags it and mixed versions fail to link on iOS.
+CI's `ios-demo` job builds the app with `xcodebuild`; nothing else compiles the Swift sources.

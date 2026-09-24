@@ -14,6 +14,14 @@ kotlin {
         compileSdk = 37
     }
     jvm()
+    // The iOS app (iosDemo/) links this as a static framework; Xcode builds it through
+    // embedAndSignAppleFrameworkForXcode.
+    listOf(iosArm64(), iosSimulatorArm64()).forEach { target ->
+        target.binaries.framework {
+            baseName = "OnvifDemo"
+            isStatic = true
+        }
+    }
 
     jvmToolchain(17)
 
@@ -26,7 +34,12 @@ kotlin {
                 implementation(libs.ktor.client.auth)
                 implementation(libs.ktor.client.logging)
 
-                // Compose dependencies
+                // Compose dependencies. The core artifacts are pinned to the Compose plugin's
+                // version: material3 and the icons lag behind it, and a mixed set fails to link
+                // on iOS.
+                implementation(libs.compose.runtime)
+                implementation(libs.compose.foundation)
+                implementation(libs.compose.ui)
                 implementation(libs.compose.material3)
                 implementation(libs.material.icons)
 

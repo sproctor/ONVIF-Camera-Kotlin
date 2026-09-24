@@ -1,0 +1,4 @@
+// Set TEAM_ID to your Apple developer team to run on a device; the simulator needs none.
+TEAM_ID=
+
+BUNDLE_ID=com.seanproctor.onvifdemo

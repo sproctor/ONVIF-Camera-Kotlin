@@ -45,3 +45,7 @@ app/release/*
 
 # work-around https://github.com/Splitties/refreshVersions/issues/640
 versions.properties
+
+# Xcode
+xcuserdata/
+.DS_Store
