@@ -9,7 +9,7 @@ package com.seanproctor.onvifcamera
  * base would turn each new subclass into a compile error for consumers, or a runtime
  * `NoWhenBranchMatchedException` for ones already compiled.
  */
-public abstract class OnvifException internal constructor(message: String) : Exception(message)
+public abstract class OnvifException internal constructor(message: String, cause: Throwable? = null) : Exception(message, cause)
 
 /**
  * The device answered 401, or with a SOAP fault whose subcode is `NotAuthorized`: the
@@ -21,7 +21,10 @@ public class OnvifUnauthorized(message: String) : OnvifException(message)
 public class OnvifForbidden(message: String) : OnvifException(message)
 
 /** The device answered with a status other than 2xx, 401 or 403, and no SOAP fault. */
-public class OnvifInvalidResponse(message: String) : OnvifException(message)
+public class OnvifInvalidResponse : OnvifException {
+    public constructor(message: String) : super(message)
+    internal constructor(message: String, cause: Throwable) : super(message, cause)
+}
 
 /**
  * The device answered with a SOAP fault. This is how a device rejects an operation it

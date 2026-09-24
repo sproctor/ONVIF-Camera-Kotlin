@@ -17,9 +17,19 @@ kotlin {
         withHostTest { }
     }
     jvm()
-    // Need to change the interfaces and implement sockets on ios first
-//    iosArm64()
-//    iosSimulatorArm64()
+    iosArm64()
+    iosSimulatorArm64()
+
+    // jvmCommon holds what the JVM and Android share: java.net discovery and java.security.
+    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
+    applyDefaultHierarchyTemplate {
+        common {
+            group("jvmCommon") {
+                withJvm()
+                withCompilations { it.platformType == org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType.androidJvm }
+            }
+        }
+    }
 
     explicitApi()
 
@@ -57,6 +67,13 @@ kotlin {
     }
 
     jvmToolchain(17)
+}
+
+// The iOS tests run in the simulator, which reads the host's files: point them at the fixtures.
+// simctl hands a SIMCTL_CHILD_ variable to the app it launches, without the prefix.
+tasks.withType<org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest>().configureEach {
+    val resources = layout.projectDirectory.dir("src/commonTest/resources").asFile.absolutePath
+    environment("SIMCTL_CHILD_ONVIF_TEST_RESOURCES", resources)
 }
 
 // Client conformance suite (onvifcamera/src/jvmTest/.../conformance): the library end to end

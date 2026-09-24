@@ -2,7 +2,7 @@ package com.seanproctor.onvifcamera.parsers
 
 import com.seanproctor.onvifcamera.parseOnvifServices
 import com.seanproctor.onvifcamera.readResourceFile
-import org.junit.Test
+import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertNotNull
 

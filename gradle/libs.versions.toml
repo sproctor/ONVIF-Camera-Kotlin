@@ -19,7 +19,6 @@ ffmpeg = "8.1.2-1.5.14"
 jetbrains-compose = "1.12.0"
 kotlin = "2.4.20"
 kotlinx-coroutines = "1.11.0"
-desugar-jdk-libs = "2.1.5"
 ktor = "3.6.0"
 lifecycle-viewmodel-compose = "2.11.0"
 material-icons = "1.7.3"
@@ -31,8 +30,10 @@ xmlutil = "1.0.2.1"
 [libraries]
 
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "androidx-activity" }
+compose-foundation = { group = "org.jetbrains.compose.foundation", name = "foundation", version.ref = "jetbrains-compose" }
+compose-runtime = { group = "org.jetbrains.compose.runtime", name = "runtime", version.ref = "jetbrains-compose" }
+compose-ui = { group = "org.jetbrains.compose.ui", name = "ui", version.ref = "jetbrains-compose" }
 compose-material3 = { group = "org.jetbrains.compose.material3", name = "material3", version.ref = "compose-material3" }
-desugar-jdk-libs = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "desugar-jdk-libs" }
 exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3" }
 exoplayer-rtsp = { group = "androidx.media3", name = "media3-exoplayer-rtsp", version.ref = "media3" }
 ffmpeg = { module = "org.bytedeco:ffmpeg", version.ref = "ffmpeg" }

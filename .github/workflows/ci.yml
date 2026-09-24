@@ -30,3 +30,62 @@ jobs:
 
       - name: Build and test
         run: ./gradlew build
+
+  # iOS tests need Xcode and the simulator, so they run on macOS. The Linux job above still
+  # compiles the iOS klibs and checks their ABI.
+  ios-test:
+    runs-on: macos-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Cache Kotlin/Native
+        uses: actions/cache@v4
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
+
+      - name: iOS simulator tests
+        run: ./gradlew :onvifcamera:iosSimulatorArm64Test
+
+  # Builds the iOS demo app (iosDemo/): the Kotlin framework through Gradle, VLCKit through
+  # Swift Package Manager, and the Swift sources, which nothing else compiles.
+  ios-demo:
+    runs-on: macos-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Cache Kotlin/Native
+        uses: actions/cache@v4
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
+
+      - name: Build the iOS demo for the simulator
+        run: >
+          xcodebuild -project iosDemo/iosDemo.xcodeproj -scheme iosDemo -configuration Debug
+          -sdk iphonesimulator -destination 'generic/platform=iOS Simulator'
+          CODE_SIGNING_ALLOWED=NO build
