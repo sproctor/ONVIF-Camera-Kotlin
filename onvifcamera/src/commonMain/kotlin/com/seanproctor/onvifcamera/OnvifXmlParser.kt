@@ -75,7 +75,10 @@ private fun detailText(fragment: CompactFragment): String? {
         buildString {
             while (reader.hasNext()) {
                 when (reader.next()) {
-                    EventType.TEXT, EventType.CDSECT -> append(reader.text)
+                    // xmlutil's own reader (the only one on iOS) reports a character or entity
+                    // reference, `&amp;` say, as ENTITY_REF with the decoded text; StAX folds it
+                    // into the surrounding TEXT.
+                    EventType.TEXT, EventType.CDSECT, EventType.ENTITY_REF -> append(reader.text)
                     // Indentation between elements is reported as ignorable and dropped, so
                     // an element boundary separates the runs of text; collapsed below.
                     else -> append(' ')
